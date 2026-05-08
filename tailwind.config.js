@@ -40,7 +40,7 @@ module.exports = {
       },
       fontFamily: {
         sans: ["var(--font-inter)", "Inter", "sans-serif"],
-        serif: ["var(--font-serif)", "serif"],
+        serif: ["var(--font-playfair)", "serif"],
       },
     },
   },

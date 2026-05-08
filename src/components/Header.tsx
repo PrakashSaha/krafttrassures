@@ -1,0 +1,187 @@
+'use client';
+
+import React, { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import SearchModal from './SearchModal';
+import CartDrawer from './CartDrawer';
+import MobileMenu from './MobileMenu';
+import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
+import { SHOP_NAV_CATEGORIES } from '@/lib/data';
+
+interface NavItem {
+  label: string;
+  href: string;
+  image?: string;
+  category?: string;
+}
+
+
+export default function Header() {
+  const { user, wishlist, logout } = useAuth();
+  const { cart, cartCount } = useCart();
+  const router = useRouter();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  const handleLogout = () => {
+    logout();
+    setProfileOpen(false);
+    router.push('/');
+  };
+
+  useEffect(() => {
+    const handleOutside = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, []);
+
+  return (
+    <>
+      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+      <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} items={cart} />
+      <MobileMenu
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        onSearchOpen={() => setSearchOpen(true)}
+      />
+
+      <header className="sticky top-0 right-0 left-0 z-50 border-b border-gray-100 bg-white/95 shadow-sm backdrop-blur-md">
+        <div className="relative mx-auto w-full max-w-[1440px]">
+          <nav className="flex items-center justify-between px-6 py-3 lg:px-12 lg:py-4">
+            {/* Logo & Main Nav */}
+            <div className="flex items-center gap-6 xl:gap-12">
+              <Link className="transition-opacity hover:opacity-80" href="/">
+                <img
+                  alt="Kraft Treasure Logo"
+                  className="h-11 w-auto object-contain lg:h-14"
+                  src="/images/img_a798301695a75446cda6944aecd9a0d9.jpeg"
+                />
+              </Link>
+              
+              <div className="hidden items-center gap-4 lg:flex xl:gap-8">
+                <Link href="/" className="nav-link">Home</Link>
+                
+                {/* Shop Mega Menu */}
+                <div className="group py-4">
+                  <Link href="/shop" className="nav-link flex items-center gap-1">
+                    Shop
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:rotate-180"><path d="m6 9 6 6 6-6"/></svg>
+                  </Link>
+                  <div className="invisible absolute top-full right-0 left-0 w-full origin-top scale-y-95 bg-white opacity-0 shadow-xl transition-all duration-300 group-hover:visible group-hover:scale-y-100 group-hover:opacity-100">
+                    <div className="mx-auto max-w-[1440px] px-12 py-12">
+                      <div className="grid grid-cols-6 gap-6">
+                        {SHOP_NAV_CATEGORIES.map((item) => (
+                          <Link key={item.label} href={item.href} className="group/item flex flex-col">
+                            <div className="relative mb-4 aspect-[3/4] overflow-hidden rounded-sm bg-zinc-100">
+                              <img src={item.image} alt={item.label} className="h-full w-full object-cover transition-transform duration-700 group-hover/item:scale-110" />
+                              <div className="absolute inset-0 bg-black/10 group-hover/item:bg-black/0 transition-colors" />
+                            </div>
+                            <h4 className="mb-2 text-[11px] font-semibold tracking-[0.2em] text-black uppercase">{item.label}</h4>
+                            <div className="flex items-center gap-2 text-[9px] font-medium tracking-[0.15em] text-black/60 uppercase group-hover/item:text-[#D33740]">
+                              Explore
+                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover/item:translate-x-1"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Link href="/our-story" className="nav-link">Our Story</Link>
+                <Link href="/contact" className="nav-link">Contact</Link>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-4 lg:gap-6">
+              {/* Search */}
+              <button onClick={() => setSearchOpen(true)} className="icon-btn" aria-label="Search">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.34-4.34"/></svg>
+              </button>
+
+              {/* Profile */}
+              {user ? (
+                <div className="relative" ref={profileRef}>
+                  <button onClick={() => setProfileOpen(!profileOpen)} className="flex items-center gap-1.5">
+                    <span className="flex h-8 w-8 items-center justify-center bg-[#D33740] text-[12px] font-bold text-white uppercase">
+                      {user.name[0]}
+                    </span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-black/50 transition-transform ${profileOpen ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6"/></svg>
+                  </button>
+                  {profileOpen && (
+                    <div className="absolute right-0 top-full mt-3 w-52 border border-black/8 bg-white shadow-2xl">
+                      <div className="border-b border-black/8 px-5 py-4">
+                        <p className="text-[9px] font-semibold tracking-[0.25em] text-black/40 uppercase">Signed In</p>
+                        <p className="font-serif text-[14px] text-black">{user.name}</p>
+                      </div>
+                      <nav className="py-1">
+                        {[
+                          { label: 'Dashboard', href: '/account' },
+                          { label: 'My Profile', href: '/account/profile' },
+                          { label: 'My Address', href: '/account/address' },
+                          { label: 'My Wishlist', href: '/wishlist' },
+                          { label: 'My Orders', href: '/account/orders' },
+                          { label: 'My Transactions', href: '/account/transactions' },
+                        ].map((item) => (
+                          <Link key={item.label} href={item.href} onClick={() => setProfileOpen(false)} className="dropdown-link">
+                            {item.label}
+                          </Link>
+                        ))}
+                      </nav>
+                      <div className="border-t border-black/8 px-5 py-3">
+                        <button onClick={handleLogout} className="flex items-center gap-2 text-[12px] font-medium text-[#D33740] hover:text-black transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link href="/login" className="icon-btn" aria-label="Login">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </Link>
+              )}
+
+              {/* Wishlist */}
+              <Link href="/wishlist" className="icon-btn relative" aria-label="Wishlist">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"/></svg>
+                {wishlist && wishlist.length > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#D33740] text-[9px] font-bold text-white shadow-sm ring-2 ring-white animate-in zoom-in duration-300">
+                    {wishlist.length}
+                  </span>
+                )}
+              </Link>
+
+              {/* Cart */}
+              <button onClick={() => setCartOpen(true)} className="icon-btn relative" aria-label="Cart">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 10a4 4 0 0 1-8 0"/><path d="M3.103 6.034h17.794"/><path d="M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z"/></svg>
+                {cartCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-black text-[9px] font-bold text-white shadow-sm ring-2 ring-white animate-in zoom-in duration-300">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Mobile Hamburger */}
+              <button onClick={() => setMobileMenuOpen(true)} className="icon-btn lg:hidden" aria-label="Menu">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+          </nav>
+        </div>
+
+      </header>
+    </>
+  );
+}
