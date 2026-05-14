@@ -17,7 +17,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'api.krafttreasure.com',
+        hostname: 'ktcms-1.onrender.com',
         pathname: '/uploads/**',
       }
     ],
