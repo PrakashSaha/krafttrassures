@@ -3,7 +3,11 @@
  * Handles custom authentication routes in Strapi (Forgot Password flow)
  */
 
-const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337';
+const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL;
+
+if (!STRAPI_URL) {
+  console.warn('Warning: NEXT_PUBLIC_STRAPI_URL is not defined in authApi.ts');
+}
 
 /**
  * Helper to handle fetch responses and extract error messages
