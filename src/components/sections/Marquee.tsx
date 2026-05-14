@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 
 const MARQUEE_TEXTS = [
@@ -11,7 +9,7 @@ const MARQUEE_TEXTS = [
 
 export default function Marquee() {
   return (
-    <div className="relative z-20 mt-10 mb-12 overflow-hidden border-y border-black/5 bg-[#FAF7F2] py-8">
+    <div className="relative z-20 mt-10 mb-12 overflow-hidden border-y border-black/5 bg-[#FFF4B3] py-8">
       <div className="flex whitespace-nowrap">
         <div className="animate-marquee flex items-center">
           {[...Array(3)].map((_, i) => (

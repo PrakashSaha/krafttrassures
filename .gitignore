@@ -43,3 +43,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Documentation & Plans
+FORGOT_PASSWORD_SETUP.md
+implementation_plan.md
+walkthrough.md
+production_cleanup.md

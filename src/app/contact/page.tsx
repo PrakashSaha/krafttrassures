@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 
 interface ContactFormData {
   name: string;
@@ -35,18 +36,18 @@ export default function ContactPage() {
       });
 
       if (response.ok) {
-        setStatus({
-          type: 'success',
-          message: 'Message sent successfully! We will get back to you soon.',
+        toast.success('Message sent successfully!', {
+          description: 'We will get back to you soon.',
         });
         setFormData({ name: '', email: '', message: '' });
       } else {
-        setStatus({ type: 'error', message: 'Failed to send message. Please try again later.' });
+        toast.error('Failed to send message', {
+          description: 'Please try again later.',
+        });
       }
     } catch (error) {
-      setStatus({
-        type: 'error',
-        message: 'An error occurred. Please check your connection and try again.',
+      toast.error('An error occurred', {
+        description: 'Please check your connection and try again.',
       });
     } finally {
       setIsSubmitting(false);
@@ -123,12 +124,6 @@ export default function ContactPage() {
                   textarea 
                   required 
                 />
-
-                {status.message && (
-                  <p className={`text-xs font-bold tracking-wide ${status.type === 'success' ? 'text-green-600' : 'text-[#D33740]'}`}>
-                    {status.message}
-                  </p>
-                )}
 
                 <button
                   type="submit"

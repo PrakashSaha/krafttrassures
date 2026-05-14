@@ -1,33 +1,28 @@
 'use client';
 
-import React from 'react';
+import React, { memo, useCallback } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuth, WishlistProduct } from '@/context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
+import { useCart } from '@/context/CartContext';
+import { Product } from '@/lib/types';
+import { toast } from 'sonner';
 
 interface ProductCardProps {
-  product: {
-    id: number | string;
-    name: string;
-    category: string;
-    price: string | number;
-    image: string;
-    hoverImage?: string;
-    href: string;
-    delay?: string;
-  };
+  product: Product & { delay?: string };
   isVisible?: boolean;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, isVisible = true }) => {
-  const { user, addToWishlist, removeFromWishlist, isInWishlist } = useAuth();
+export const ProductCard = memo(({ product, isVisible = true }: ProductCardProps) => {
+  const { user, toggleWishlist, isInWishlist } = useAuth();
   const router = useRouter();
 
   const formattedPrice = typeof product.price === 'number' 
     ? `₹${product.price.toLocaleString('en-IN')}` 
     : product.price;
 
-  const handleWishlist = (e: React.MouseEvent) => {
+  const handleWishlist = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -36,21 +31,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, isVisible = t
       return;
     }
 
-    if (isInWishlist(product.id)) {
-      removeFromWishlist(product.id);
-    } else {
-      const wishlistProduct: WishlistProduct = {
-        id: product.id,
-        slug: product.href.split('/').pop() || '',
-        name: product.name,
-        category: product.category,
-        price: typeof product.price === 'number' ? product.price : parseInt(product.price.replace(/[₹,]/g, '')),
-        image: product.image,
-      };
-      addToWishlist(wishlistProduct);
-    }
-  };
+    toggleWishlist(product);
+  }, [user, product, toggleWishlist, router]);
 
+
+  const { addToCart } = useCart();
+
+  const handleAddToCart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart(product);
+    
+    // If the item is in the wishlist, remove it when adding to cart
+    if (isInWishlist(product.id)) {
+      toggleWishlist(product);
+      toast.success('Moved to collection', {
+        description: `${product.name} has been moved from your wishlist to the cart.`,
+      });
+    }
+  }, [product, addToCart, isInWishlist, toggleWishlist]);
 
   return (
     <Link
@@ -58,17 +57,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, isVisible = t
       className={`group block transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}
       style={{ transitionDelay: isVisible ? product.delay : '0s' }}
     >
-      <div className="relative mb-4 aspect-[4/5] overflow-hidden border border-zinc-100 bg-zinc-50">
-        <img
-          src={product.image}
+      <div className="relative mb-4 aspect-[4/5] overflow-hidden border border-[#C8C3BB] bg-zinc-50">
+        <Image
+          src={product.image || '/images/placeholder.png'}
           alt={product.name}
-          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 group-hover:opacity-0"
+          fill
+          sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+          className="absolute inset-0 object-cover transition-opacity duration-700 group-hover:opacity-0"
         />
         {product.hoverImage && (
-          <img
+          <Image
             src={product.hoverImage}
             alt={`${product.name} alternate`}
-            className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700 group-hover:opacity-100"
+            fill
+            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+            className="absolute inset-0 object-cover opacity-0 transition-opacity duration-700 group-hover:opacity-100"
           />
         )}
         
@@ -82,7 +85,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, isVisible = t
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill={user && isInWishlist(product.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" /></svg>
             </button>
-            <button className="action-icon-btn">
+            <button onClick={handleAddToCart} className="action-icon-btn" title="Add to collection">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 10a4 4 0 0 1-8 0"/><path d="M3.103 6.034h17.794"/><path d="M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z"/></svg>
             </button>
           </div>
@@ -95,12 +98,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, isVisible = t
       </div>
       
       <div className="text-center space-y-1">
-        <p className="text-[9px] font-semibold tracking-[0.3em] text-[#C5AB7D] uppercase">{product.category}</p>
+        <p className="text-[9px] font-semibold tracking-[0.3em] text-[#8C6E3F] uppercase">{product.category}</p>
         <h3 className="font-serif text-[15px] text-black group-hover:text-[#D33740] transition-colors line-clamp-1">{product.name}</h3>
         <p className="font-serif text-[16px] font-medium text-black">{formattedPrice}</p>
       </div>
 
     </Link>
   );
-};
+});
+
 export default ProductCard;

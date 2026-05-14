@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { FOOTER_QUICK_LINKS, FOOTER_SERVICES_LINKS } from '@/lib/data';
 
 export default function Footer() {
@@ -18,10 +19,13 @@ export default function Footer() {
         {/* Brand Section */}
         <div className="lg:col-span-1">
           <div className="mb-8 origin-left scale-110">
-            <img
+            <Image
               alt="Kraft Treasure"
+              width={200}
+              height={80}
               className="h-16 w-auto object-contain lg:h-20"
               src="/images/img_a798301695a75446cda6944aecd9a0d9.jpeg"
+              style={{ width: 'auto' }}
             />
           </div>
           <p className="mb-8 max-w-xs text-sm leading-relaxed text-white/60">

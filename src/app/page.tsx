@@ -14,25 +14,47 @@ import TimelessTreasures from '@/components/sections/TimelessTreasures';
 import TrustedBy from '@/components/sections/TrustedBy';
 import Instagram from '@/components/sections/Instagram';
 import Features from '@/components/sections/Features';
+import { getHeroSliders, getProducts, getCategories, getTestimonials, getStorySteps, getInstagramFeeds } from '@/lib/strapi';
 
-export default function Home() {
+export default async function Home() {
+  // Parallel fetching for all sections
+  const [
+    heroSlides, 
+    trendingProducts,
+    newArrivals,
+    categories, 
+    testimonials, 
+    storySteps, 
+    instagramFeeds,
+    treasureProducts
+  ] = await Promise.all([
+    getHeroSliders(),
+    getProducts({ 'pagination[pageSize]': 5, 'sort[0]': 'updatedAt:desc' }),
+    getProducts({ 'pagination[pageSize]': 8, 'sort[0]': 'createdAt:desc' }),
+    getCategories(),
+    getTestimonials(),
+    getStorySteps(),
+    getInstagramFeeds(),
+    getProducts({ 'pagination[pageSize]': 10, 'filters[categories][label][$containsi]': 'Show Pieces' }) // Example filter for treasures
+  ]);
+
   return (
     <>
       <Topbar />
       <main className="min-h-screen bg-white">
-        <Hero />
+        <Hero slides={heroSlides} />
         <Intro />
-        <Collections />
-        <Trending />
+        <Collections categories={categories} />
+        <Trending products={trendingProducts} />
         <Heritage />
         <Marquee />
-        <NewArrivals />
+        <NewArrivals products={newArrivals} />
         <Adornments />
-        <Testimonials />
-        <ArtisanStories />
-        <TimelessTreasures />
+        <Testimonials reviews={testimonials} />
+        <ArtisanStories steps={storySteps} />
+        <TimelessTreasures products={treasureProducts} />
         <TrustedBy />
-        <Instagram />
+        <Instagram posts={instagramFeeds} />
         <Features />
       </main>
     </>

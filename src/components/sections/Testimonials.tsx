@@ -2,24 +2,18 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 
-interface Testimonial {
-  id: number;
-  name: string;
-  text: string;
-  delay: string;
+interface Review {
+  id: number | string;
+  author: string;
+  content: string;
+  rating?: number;
 }
 
-const TESTIMONIALS: Testimonial[] = [
-  { id: 1, name: 'Ananya Sharma', text: 'The intricate beadwork on the necklace I ordered is breathtaking. You can truly feel the soul of Arunachal in every piece.', delay: '0s' },
-  { id: 2, name: 'Rahul Mukherjee', text: "Exceptional craftsmanship. The singing bowl has the most resonant frequency I've ever experienced. A true masterpiece.", delay: '0.2s' },
-  { id: 3, name: 'Priyanka Gogoi', text: 'Finally, a platform that brings the authentic tribal arts of our region to the world. The quality is peerless and ethical.', delay: '0.4s' },
-  { id: 4, name: 'Siddharth Verma', text: 'The bamboo lamp adds such a warm, organic feel to my living room. Fast delivery and beautiful packaging.', delay: '0.6s' },
-  { id: 5, name: 'Meera Das', text: "I bought a traditional handloom shawl, and the quality is outstanding. It's a piece of art I'll cherish forever.", delay: '0.8s' },
-];
-
-export default function Testimonials() {
+export default function Testimonials({ reviews }: { reviews?: Review[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(3);
+
+  const displayReviews = reviews && reviews.length > 0 ? reviews : [];
 
   useEffect(() => {
     const handleResize = () => {
@@ -32,7 +26,7 @@ export default function Testimonials() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const maxIndex = Math.max(0, TESTIMONIALS.length - visibleCount);
+  const maxIndex = Math.max(0, displayReviews.length - visibleCount);
 
   const rotate = useCallback((direction: 'next' | 'prev') => {
     setCurrentIndex((prev) => {
@@ -59,20 +53,20 @@ export default function Testimonials() {
             className="-ml-4 flex transition-transform duration-500 ease-out md:-ml-8 lg:-ml-12"
             style={{ transform: `translateX(-${currentIndex * (100 / visibleCount)}%)` }}
           >
-            {TESTIMONIALS.map((t) => (
+            {displayReviews.map((t) => (
               <div key={t.id} className="w-full flex-none py-4 pl-4 md:w-1/2 md:pl-8 lg:w-1/3 lg:pl-12">
                 <div className="group relative flex h-full flex-col items-center border border-black/5 bg-[#FAF7F2] p-8 text-center transition-all duration-500 hover:shadow-xl">
                   <div className="absolute inset-0 z-0 translate-y-full bg-white transition-transform duration-500 ease-in-out group-hover:translate-y-0" />
                   <div className="relative z-10 flex h-full flex-col items-center">
                     <div className="mb-8 flex gap-1">
-                      {[...Array(5)].map((_, i) => <StarIcon key={i} />)}
+                      {[...Array(t.rating || 5)].map((_, i) => <StarIcon key={i} />)}
                     </div>
                     <p className="mb-8 flex-1 font-serif text-lg leading-relaxed text-black italic md:text-xl">
-                      "{t.text}"
+                      "{t.content}"
                     </p>
                     <div className="mt-auto">
                       <p className="font-sans text-[11px] font-bold tracking-[0.2em] text-[#C5AB7D] uppercase">
-                        {t.name}
+                        {t.author}
                       </p>
                     </div>
                   </div>

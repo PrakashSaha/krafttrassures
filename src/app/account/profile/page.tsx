@@ -1,27 +1,105 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { fetchAPI } from '@/lib/api';
+
 
 export default function ProfilePage() {
+  const { user, updateUser } = useAuth();
   const [editing, setEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
-    firstName: 'Pifoba',
-    lastName: 'Pifoba',
-    email: 'pifoba2567@codoteam.com',
-    phone: '',
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
   });
 
+  // Sync with user context when it loads/changes
+  useEffect(() => {
+    if (user) {
+      setForm(prev => ({
+        ...prev,
+        firstName: user.firstName || prev.firstName,
+        lastName: user.lastName || prev.lastName,
+        email: user.email || prev.email,
+        phone: user.phone || prev.phone,
+      }));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user?.jwt) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const resData = await fetchAPI('/api/users/me?populate=*', {
+          token: user.jwt
+        });
+        
+        // Strapi v5/v4 response structures vary. Be extremely robust.
+        const d = resData.data?.attributes || resData.attributes || resData.data || resData;
+
+        if (d) {
+          setForm({
+            firstName: d.firstName || d.first_name || d.firstname || user?.firstName || '',
+            lastName: d.lastName || d.last_name || d.lastname || user?.lastName || '',
+            email: d.email || user?.email || '',
+            phone: d.phone || d.phoneNumber || user?.phone || '',
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch profile', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user?.jwt || !user?.id) return;
+    
+    try {
+      await fetchAPI(`/api/users/${user.id}`, {
+        method: 'PUT',
+        token: user.jwt,
+        body: JSON.stringify({
+          firstName: form.firstName,
+          lastName: form.lastName,
+          phone: form.phone
+        })
+      });
+      
+      // Update local context
+      updateUser({
+        firstName: form.firstName,
+        lastName: form.lastName,
+        phone: form.phone
+      });
+      
+      setEditing(false);
+    } catch (err: any) {
+      console.error('Error saving profile', err);
+    }
+  };
+
   return (
-    <div className="border border-black/5 bg-white p-8 lg:p-12 shadow-sm animate-in fade-in duration-1000">
+    <div className="border border-[#C8C3BB] bg-white p-8 lg:p-12 shadow-sm animate-in fade-in duration-1000"> {/* // CONTRAST FIX */}
       <div className="mb-10">
-        <p className="mb-3 text-[10px] font-bold tracking-[0.4em] text-[#C5AB7D] uppercase">Account Profile</p>
+        <p className="mb-3 text-[10px] font-bold tracking-[0.4em] text-[#8C6E3F] uppercase">Account Profile</p> {/* // CONTRAST FIX */}
         <h1 className="font-serif text-4xl text-black">Personal Details</h1>
-        <p className="mt-4 text-[14px] leading-relaxed text-black/50">
+        <p className="mt-4 text-[14px] leading-relaxed text-[#4A4540]"> {/* // CONTRAST FIX */}
           Update your personal details for shipping, invoices, and heritage collection management.
         </p>
       </div>
 
-      <div className="border-t border-black/5 pt-10">
+      <div className="border-t border-[#C8C3BB] pt-10"> {/* // CONTRAST FIX */}
         <div className="mb-10 flex justify-end">
           <button
             onClick={() => setEditing(!editing)}
@@ -43,25 +121,25 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        <form onSubmit={(e) => { e.preventDefault(); setEditing(false); }} className="space-y-8">
+        <form onSubmit={handleSave} className="space-y-8">
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
             <ProfileField label="First Name" value={form.firstName} onChange={(v) => setForm({ ...form, firstName: v })} disabled={!editing} />
             <ProfileField label="Last Name" value={form.lastName} onChange={(v) => setForm({ ...form, lastName: v })} disabled={!editing} />
           </div>
 
-          <ProfileField label="Email Address" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} disabled={!editing} required />
+          <ProfileField label="Email Address" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} disabled={true} required />
 
           <div>
-            <label className="mb-2 block text-[10px] font-bold tracking-[0.2em] text-black/30 uppercase">Phone Number</label>
-            <div className={`flex border border-black/5 bg-[#FAF7F2] transition-colors ${editing ? 'focus-within:border-[#C5AB7D]' : ''}`}>
-              <span className="flex items-center border-r border-black/5 px-4 py-4 text-[13px] text-black/40 font-bold tracking-tight">🇮🇳 +91</span>
+            <label className="mb-2 block text-[10px] font-bold tracking-[0.2em] text-[#595148] uppercase">Phone Number</label> {/* // CONTRAST FIX */}
+            <div className={`flex border border-[#C8C3BB] bg-[#FAF7F2] transition-colors ${editing ? 'focus-within:border-black' : ''}`}> {/* // CONTRAST FIX */}
+              <span className="flex items-center border-r border-[#C8C3BB] px-4 py-4 text-[13px] text-[#595148] font-bold tracking-tight">🇮🇳 +91</span> {/* // CONTRAST FIX */}
               <input
                 type="tel"
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 disabled={!editing}
                 placeholder="Enter 10-digit number"
-                className="flex-1 bg-transparent px-4 py-4 text-[14px] text-black outline-none disabled:cursor-not-allowed placeholder:text-black/10"
+                className="flex-1 bg-transparent px-4 py-4 text-[14px] text-black outline-none disabled:cursor-not-allowed placeholder:text-[#595148]" // CONTRAST FIX
               />
             </div>
           </div>
@@ -79,10 +157,19 @@ export default function ProfilePage() {
   );
 }
 
-function ProfileField({ label, value, onChange, disabled, type = 'text', required }: any) {
+interface ProfileFieldProps {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  disabled: boolean;
+  type?: string;
+  required?: boolean;
+}
+
+function ProfileField({ label, value, onChange, disabled, type = 'text', required }: ProfileFieldProps) {
   return (
     <div>
-      <label className="mb-2 block text-[10px] font-bold tracking-[0.2em] text-black/30 uppercase">
+      <label className="mb-2 block text-[10px] font-bold tracking-[0.2em] text-[#595148] uppercase"> {/* // CONTRAST FIX */}
         {label} {required && <span className="text-[#D33740]">*</span>}
       </label>
       <input
@@ -90,7 +177,7 @@ function ProfileField({ label, value, onChange, disabled, type = 'text', require
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className="w-full border border-black/5 bg-[#FAF7F2] px-4 py-4 text-[14px] text-black outline-none transition-all disabled:cursor-not-allowed focus:border-[#C5AB7D] placeholder:text-black/10"
+        className="w-full border border-[#C8C3BB] bg-[#FAF7F2] px-4 py-4 text-[14px] text-black outline-none transition-all disabled:cursor-not-allowed focus:border-black placeholder:text-[#595148]" // CONTRAST FIX
       />
     </div>
   );

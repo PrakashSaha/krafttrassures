@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Heritage() {
   const [isVisible, setIsVisible] = useState(false);
@@ -27,10 +28,12 @@ export default function Heritage() {
         <div className="grid grid-cols-1 lg:grid-cols-2">
           {/* Image Side */}
           <div className={`relative aspect-square overflow-hidden transition-all duration-1000 lg:aspect-auto lg:min-h-[600px] ${isVisible ? 'translate-x-0 opacity-100' : '-translate-x-10 opacity-0'}`}>
-            <img
+            <Image
               src="/images/img_6573ea3686d59d2d28fef8f1494d708a.jpeg"
               alt="Himalayan Heritage"
-              className="absolute inset-0 h-full w-full object-cover"
+              fill
+              className="object-cover"
+              sizes="(max-width: 1024px) 100vw, 50vw"
             />
           </div>
 

@@ -3,12 +3,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { ProductCard } from '../ProductCard';
-import { TREASURE_DATA } from '@/lib/data';
+import { Product } from '@/lib/types';
 
 
-export default function TimelessTreasures() {
+export default function TimelessTreasures({ products }: { products?: Product[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(5);
+
+  const displayProducts = products && products.length > 0 ? products : [];
 
   useEffect(() => {
     const handleResize = () => {
@@ -22,7 +24,7 @@ export default function TimelessTreasures() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const maxIndex = Math.max(0, TREASURE_DATA.length - visibleCount);
+  const maxIndex = Math.max(0, displayProducts.length - visibleCount);
 
   const slide = useCallback((direction: 'next' | 'prev') => {
     setCurrentIndex((prev) => {
@@ -50,7 +52,7 @@ export default function TimelessTreasures() {
             className="-ml-4 flex transition-transform duration-500 ease-out lg:-ml-5"
             style={{ transform: `translateX(-${currentIndex * (100 / visibleCount)}%)` }}
           >
-            {TREASURE_DATA.map((product) => (
+            {displayProducts.map((product) => (
               <div
                 key={product.id}
                 className="min-w-0 flex-[0_0_100%] pl-4 sm:flex-[0_0_50%] md:flex-[0_0_33.33%] lg:flex-[0_0_20%] lg:pl-5"

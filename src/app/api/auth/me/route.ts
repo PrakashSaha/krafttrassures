@@ -1,0 +1,38 @@
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
+
+const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL;
+if (!STRAPI_URL) {
+  throw new Error('NEXT_PUBLIC_STRAPI_URL is not defined');
+}
+
+export async function GET() {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('kt_auth_token')?.value;
+
+    if (!token) {
+      return NextResponse.json({ user: null }, { status: 200 });
+    }
+
+    const res = await fetch(`${STRAPI_URL}/api/users/me?populate=*`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      // Token might be expired or invalid
+      cookieStore.delete('kt_auth_token');
+      return NextResponse.json({ user: null }, { status: 200 });
+    }
+
+    const rawUser = await res.json();
+    const user = rawUser.data || rawUser;
+    
+    return NextResponse.json({ user, jwt: token }, { status: 200 });
+  } catch (error) {
+    console.error('Auth check error:', error);
+    return NextResponse.json({ user: null, error: 'Internal Server Error' }, { status: 500 });
+  }
+}

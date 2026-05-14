@@ -2,33 +2,146 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Topbar from '@/components/sections/Topbar';
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, isAuthenticated, loading } = useAuth();
   const router = useRouter();
   const [showLoginPass, setShowLoginPass] = useState(false);
   const [showRegisterPass, setShowRegisterPass] = useState(false);
+  const [showRegisterConfirmPass, setShowRegisterConfirmPass] = useState(false);
+
+  // Redirect if already logged in
+  React.useEffect(() => {
+    if (!loading && isAuthenticated) {
+      router.push('/account');
+    }
+  }, [isAuthenticated, loading, router]);
   
   const [loginEmail, setLoginEmail] = useState('');
-  const [regFirstName, setRegFirstName] = useState('');
-  const [regLastName, setRegLastName] = useState('');
-  const [regEmail, setRegEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const [regEmail, setRegEmail] = useState('');
+  const [regPhone, setRegPhone] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [regConfirmPassword, setRegConfirmPassword] = useState('');
+  const [regError, setRegError] = useState('');
+  const [regLoading, setRegLoading] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [isLoginView, setIsLoginView] = useState(true);
+
+  const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL;
+  if (!STRAPI_URL) {
+    throw new Error('NEXT_PUBLIC_STRAPI_URL is not defined');
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const name = loginEmail.split('@')[0];
-    login({ name: name.charAt(0).toUpperCase() + name.slice(1), email: loginEmail });
-    router.push('/account');
+    setLoginError('');
+    setLoginLoading(true);
+
+    try {
+      const res = await fetch(`${STRAPI_URL}/api/auth/local`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          identifier: loginEmail,
+          password: loginPassword,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error?.message || 'Invalid credentials');
+      }
+
+      login({ 
+        ...data.user,
+        jwt: data.jwt 
+      });
+      router.push('/account');
+    } catch (err: any) {
+      setLoginError(err.message);
+      toast.error('Login Failed', {
+        description: err.message,
+      });
+    } finally {
+      setLoginLoading(false);
+    }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    const name = `${regFirstName} ${regLastName}`.trim() || regEmail.split('@')[0];
-    login({ name, email: regEmail });
-    router.push('/account');
+    setRegError('');
+    if (regPassword !== regConfirmPassword) {
+      setRegError('Passwords do not match');
+      setRegLoading(false);
+      return;
+    }
+    setRegLoading(true);
+
+    try {
+      const username = regEmail;
+      
+      const res = await fetch(`${STRAPI_URL}/api/auth/local/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username,
+          email: regEmail,
+          password: regPassword,
+          // phone: regPhone // REMOVED: Saving separately below to avoid Strapi validation errors
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error('Registration failed:', {
+          status: res.status,
+          statusText: res.statusText,
+        });
+        throw new Error(data.error?.message || data.message || `Registration failed (${res.status}: ${res.statusText})`);
+      }
+
+      // If registration successful, manually update the phone number
+      if (data.jwt && data.user?.id && regPhone) {
+        try {
+          await fetch(`${STRAPI_URL}/api/users/${data.user.id}`, {
+            method: 'PUT',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${data.jwt}`
+            },
+            body: JSON.stringify({ phone: regPhone }),
+          });
+          // Update the user object in the data to include the phone
+          data.user.phone = regPhone;
+        } catch (updateErr) {
+          console.error('Failed to save phone number during registration', updateErr);
+          // We don't throw here so the user can still log in
+        }
+      }
+
+      login({ 
+        ...data.user,
+        jwt: data.jwt 
+      });
+      router.push('/account');
+    } catch (err: any) {
+      setRegError(err.message);
+      toast.error('Registration Failed', {
+        description: err.message,
+      });
+    } finally {
+      setRegLoading(false);
+    }
   };
 
   return (
@@ -37,70 +150,120 @@ export default function LoginPage() {
       
       <div className="mx-auto max-w-[1100px] px-6 py-16 lg:px-12 lg:py-24">
         {/* Page Header */}
-        <div className="mb-16 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+        <div className="mb-12 text-center animate-in fade-in slide-in-from-bottom-4 duration-1000">
           <p className="mb-3 text-[10px] font-bold tracking-[0.4em] text-[#C5AB7D] uppercase">Account Access</p>
-          <h1 className="mb-6 font-serif text-4xl text-black lg:text-6xl">Login Or Register</h1>
-          <p className="max-w-md text-[14px] leading-relaxed text-black/50">
-            Sign in to access your curated archive, or create a new profile to begin your journey with Kraft Treasure.
+          <h1 className="mb-4 font-serif text-4xl text-black lg:text-6xl">{isLoginView ? 'Welcome Back' : 'Create Account'}</h1>
+          <p className="mx-auto max-w-md text-[14px] leading-relaxed text-black/50">
+            {isLoginView 
+              ? 'Sign in to access your curated archive and manage your treasures.' 
+              : 'Begin your journey with Kraft Treasure and preserve heritage craftsmanship.'}
           </p>
         </div>
 
-        {/* Auth Cards */}
-        <div className="grid gap-8 lg:grid-cols-2">
-          {/* Login Card */}
-          <div className="flex flex-col border border-black/5 bg-white p-8 shadow-sm lg:p-12 animate-in fade-in slide-in-from-left-8 duration-1000 delay-200">
-            <div className="mb-8 flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center bg-[#D33740] text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold tracking-[0.3em] text-[#C5AB7D] uppercase">Sign In</p>
-                <h2 className="font-serif text-2xl text-black">Member Login</h2>
-              </div>
-            </div>
+        {/* View Toggle Tabs */}
+        <div className="mx-auto mb-10 flex w-full max-w-[400px] border border-black/5 bg-white p-1.5 shadow-sm">
+          <button 
+            onClick={() => setIsLoginView(true)}
+            className={`flex-1 py-3 text-[10px] font-bold tracking-[0.2em] uppercase transition-all ${isLoginView ? 'bg-black text-white' : 'text-black/40 hover:text-black'}`}
+          >
+            Sign In
+          </button>
+          <button 
+            onClick={() => setIsLoginView(false)}
+            className={`flex-1 py-3 text-[10px] font-bold tracking-[0.2em] uppercase transition-all ${!isLoginView ? 'bg-[#D33740] text-white' : 'text-black/40 hover:text-black'}`}
+          >
+            Register
+          </button>
+        </div>
 
-            <form className="space-y-6" onSubmit={handleLogin}>
-              <AuthField label="Email" type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="your@email.com" required />
-              <div className="relative">
-                <AuthField label="Password" type={showLoginPass ? 'text' : 'password'} placeholder="••••••••" required />
-                <button type="button" onClick={() => setShowLoginPass(!showLoginPass)} className="absolute right-4 top-[38px] text-black/30 hover:text-black">
-                  {showLoginPass ? <EyeOffIcon /> : <EyeIcon />}
-                </button>
-                <div className="mt-2 text-right">
-                  <Link href="#" className="text-[10px] font-bold tracking-[0.1em] text-black/40 uppercase hover:text-[#D33740]">Forgot Password?</Link>
+        <div className="mx-auto max-w-[500px]">
+          {isLoginView ? (
+            /* Login Card */
+            <div className="flex flex-col border border-black/5 bg-white p-8 shadow-xl lg:p-12 animate-in fade-in zoom-in-95 duration-700">
+              <div className="mb-8 flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center bg-[#D33740] text-white">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold tracking-[0.3em] text-[#C5AB7D] uppercase">Sign In</p>
+                  <h2 className="font-serif text-2xl text-black">Member Login</h2>
                 </div>
               </div>
-              <button type="submit" className="btn-primary w-full mt-4">Login</button>
-            </form>
-          </div>
 
-          {/* Register Card */}
-          <div className="flex flex-col border border-black/5 bg-white p-8 shadow-sm lg:p-12 animate-in fade-in slide-in-from-right-8 duration-1000 delay-400">
-            <div className="mb-8 flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center bg-black text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold tracking-[0.3em] text-[#C5AB7D] uppercase">Join Us</p>
-                <h2 className="font-serif text-2xl text-black">Create Account</h2>
-              </div>
-            </div>
-
-            <form className="space-y-6" onSubmit={handleRegister}>
-              <div className="grid grid-cols-2 gap-4">
-                <AuthField label="First Name" value={regFirstName} onChange={(e) => setRegFirstName(e.target.value)} placeholder="First Name" required />
-                <AuthField label="Last Name" value={regLastName} onChange={(e) => setRegLastName(e.target.value)} placeholder="Last Name" />
-              </div>
-              <AuthField label="Email" type="email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} placeholder="your@email.com" required />
-              <div className="relative">
-                <AuthField label="Password" type={showRegisterPass ? 'text' : 'password'} placeholder="••••••••" required />
-                <button type="button" onClick={() => setShowRegisterPass(!showRegisterPass)} className="absolute right-4 top-[38px] text-black/30 hover:text-black">
-                  {showRegisterPass ? <EyeOffIcon /> : <EyeIcon />}
+              <form className="space-y-6" onSubmit={handleLogin}>
+                {loginError && <div className="p-4 text-[12px] font-bold tracking-wider text-white bg-[#D33740] uppercase">{loginError}</div>}
+                <AuthField label="Email" type="email" value={loginEmail} onChange={(e: any) => setLoginEmail(e.target.value)} placeholder="your@email.com" required />
+                <div className="relative">
+                  <AuthField label="Password" type={showLoginPass ? 'text' : 'password'} value={loginPassword} onChange={(e: any) => setLoginPassword(e.target.value)} placeholder="••••••••" required className="pr-12" />
+                  <button type="button" onClick={() => setShowLoginPass(!showLoginPass)} className="absolute right-4 top-[38px] text-[#595148] hover:text-black transition-colors">
+                    {showLoginPass ? <EyeOffIcon /> : <EyeIcon />}
+                  </button>
+                  <div className="mt-2 text-right">
+                    <Link href="/forgot-password" className="text-[10px] font-bold tracking-[0.1em] text-black/40 uppercase hover:text-[#D33740]">Forgot Password?</Link>
+                  </div>
+                </div>
+                <button type="submit" disabled={loginLoading} className="btn-primary w-full mt-4 disabled:opacity-50">
+                  {loginLoading ? 'Signing In...' : 'Sign In'}
+                </button>
+              </form>
+              
+              <div className="mt-8 text-center border-t border-black/5 pt-6">
+                <button 
+                  onClick={() => setIsLoginView(false)}
+                  className="text-[10px] font-bold tracking-[0.2em] text-black/40 uppercase hover:text-[#D33740] transition-colors"
+                >
+                  Don't have an account? Create one
                 </button>
               </div>
-              <button type="submit" className="btn-secondary w-full mt-4">Register</button>
-            </form>
-          </div>
+            </div>
+          ) : (
+            /* Register Card */
+            <div className="flex flex-col border border-black/5 bg-white p-8 shadow-xl lg:p-12 animate-in fade-in zoom-in-95 duration-700">
+              <div className="mb-8 flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center bg-black text-white">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold tracking-[0.3em] text-[#C5AB7D] uppercase">Join Us</p>
+                  <h2 className="font-serif text-2xl text-black">Create Account</h2>
+                </div>
+              </div>
+
+              <form className="space-y-6" onSubmit={handleRegister}>
+                {regError && <div className="p-4 text-[12px] font-bold tracking-wider text-white bg-black uppercase">{regError}</div>}
+                
+                <AuthField label="Email" type="email" value={regEmail} onChange={(e: any) => setRegEmail(e.target.value)} placeholder="your@email.com" required />
+                <AuthField label="Phone Number" type="tel" value={regPhone} onChange={(e: any) => setRegPhone(e.target.value)} placeholder="Phone Number" required />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="relative">
+                    <AuthField label="Password" type={showRegisterPass ? 'text' : 'password'} value={regPassword} onChange={(e: any) => setRegPassword(e.target.value)} placeholder="••••••••" required className="pr-12" />
+                    <button type="button" onClick={() => setShowRegisterPass(!showRegisterPass)} className="absolute right-4 top-[38px] text-[#595148] hover:text-black transition-colors">
+                      {showRegisterPass ? <EyeOffIcon /> : <EyeIcon />}
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <AuthField label="Confirm" type={showRegisterConfirmPass ? 'text' : 'password'} value={regConfirmPassword} onChange={(e: any) => setRegConfirmPassword(e.target.value)} placeholder="••••••••" required className="pr-12" />
+                    <button type="button" onClick={() => setShowRegisterConfirmPass(!showRegisterConfirmPass)} className="absolute right-4 top-[38px] text-[#595148] hover:text-black transition-colors">
+                      {showRegisterConfirmPass ? <EyeOffIcon /> : <EyeIcon />}
+                    </button>
+                  </div>
+                </div>
+                <button type="submit" disabled={regLoading} className="btn-primary w-full mt-4 disabled:opacity-50">
+                  {regLoading ? 'Creating Profile...' : 'Register'}
+                </button>
+              </form>
+
+              <div className="mt-8 text-center border-t border-black/5 pt-6">
+                <button 
+                  onClick={() => setIsLoginView(true)}
+                  className="text-[10px] font-bold tracking-[0.2em] text-black/40 uppercase hover:text-black transition-colors"
+                >
+                  Already have an account? Sign In
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -116,15 +279,15 @@ export default function LoginPage() {
   );
 }
 
-function AuthField({ label, ...props }: any) {
+function AuthField({ label, className = "", ...props }: any) {
   return (
     <div>
-      <label className="mb-2 block text-[10px] font-bold tracking-[0.2em] text-black/40 uppercase">
+      <label className="mb-2 block text-[10px] font-bold tracking-[0.2em] text-[#595148] uppercase">
         {label} {props.required && <span className="text-[#D33740]">*</span>}
       </label>
       <input
         {...props}
-        className="w-full border border-black/5 bg-[#FAF7F2] px-4 py-4 text-[13px] text-black outline-none focus:border-[#C5AB7D] transition-colors placeholder:text-black/20"
+        className={`w-full border border-[#C8C3BB] bg-[#FAF7F2] px-4 py-4 text-[13px] text-black outline-none focus:border-black transition-colors placeholder:text-[#595148]/40 ${className}`}
       />
     </div>
   );

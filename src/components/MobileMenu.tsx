@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 
 interface MobileMenuProps {
@@ -36,12 +37,15 @@ export default function MobileMenu({ isOpen, onClose, onSearchOpen }: MobileMenu
   return (
     <div className="fixed inset-0 z-[200] flex flex-col bg-white animate-in fade-in duration-300">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-6 border-b border-black/5">
+      <div className="flex items-center justify-between px-6 py-6 border-b border-[#C8C3BB]"> {/* // CONTRAST FIX */}
         <Link href="/" onClick={onClose}>
-          <img
+          <Image
             src="/images/img_a798301695a75446cda6944aecd9a0d9.jpeg"
             alt="Kraft Treasure"
+            width={120}
+            height={40}
             className="h-10 w-auto object-contain"
+            style={{ width: 'auto' }}
           />
         </Link>
         <button
@@ -63,7 +67,7 @@ export default function MobileMenu({ isOpen, onClose, onSearchOpen }: MobileMenu
             Search
           </button>
           <Link
-            href="/wishlist"
+            href="/account/wishlist"
             onClick={onClose}
             className="action-btn flex items-center justify-center relative"
           >
@@ -106,14 +110,14 @@ export default function MobileMenu({ isOpen, onClose, onSearchOpen }: MobileMenu
       </div>
 
       {/* Socials */}
-      <div className="px-6 py-8 border-t border-black/5 flex items-center gap-6">
+      <div className="px-6 py-8 border-t border-[#C8C3BB] flex items-center gap-6"> {/* // CONTRAST FIX */}
         <SocialIcon href="#" icon="instagram" />
         <SocialIcon href="#" icon="facebook" />
       </div>
 
       <style jsx>{`
         .action-btn {
-          @apply h-14 border border-black/10 bg-white text-[11px] font-bold tracking-[0.2em] text-black uppercase transition-colors active:bg-black active:text-white;
+          @apply h-14 border border-[#C8C3BB] bg-white text-[11px] font-bold tracking-[0.2em] text-black uppercase transition-colors active:bg-black active:text-white; /* // CONTRAST FIX */
         }
       `}</style>
     </div>

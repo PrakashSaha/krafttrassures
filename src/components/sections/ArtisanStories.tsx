@@ -1,22 +1,28 @@
-'use client';
-
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
-import { STORY_STEPS } from '@/lib/data';
+interface StoryStep {
+  id: string;
+  title: string;
+  desc: string;
+}
 
+export default function ArtisanStories({ steps }: { steps?: StoryStep[] }) {
+  const displaySteps = steps && steps.length > 0 ? steps : [];
 
-export default function ArtisanStories() {
   return (
     <section id="artisan-stories" className="mx-auto w-full max-w-[1440px] px-6 pt-8 pb-12 lg:px-12 lg:pt-10 lg:pb-16">
       <div className="relative overflow-hidden bg-[#FAF7F2]">
         <div className="grid grid-cols-1 lg:grid-cols-2">
           {/* Image Side */}
           <div className="relative min-h-[400px] lg:min-h-[550px] overflow-hidden">
-            <img
+            <Image
               src="/images/img_8c34743a7b92154a6ceed277880a2e12.png"
               alt="Made by Hands. Carried by Heritage."
-              className="absolute inset-0 h-full w-full object-cover transition-transform duration-2000 hover:scale-105"
+              fill
+              className="object-cover transition-transform duration-2000 hover:scale-105"
+              sizes="(max-width: 1024px) 100vw, 50vw"
             />
           </div>
 
@@ -34,7 +40,7 @@ export default function ArtisanStories() {
             
             {/* Steps Grid */}
             <div className="mb-12 grid grid-cols-1 gap-8 sm:grid-cols-3">
-              {STORY_STEPS.map((step) => (
+              {displaySteps.map((step) => (
                 <div key={step.id}>
                   <p className="mb-4 font-serif text-4xl text-[#C5AB7D] opacity-80 lg:text-5xl">
                     {step.id}

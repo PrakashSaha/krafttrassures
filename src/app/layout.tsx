@@ -7,6 +7,9 @@ import Footer from '@/components/Footer';
 import { AuthProvider } from '@/context/AuthContext';
 import { CartProvider } from '@/context/CartContext';
 import { Metadata } from 'next';
+import { getCategories } from '@/lib/strapi';
+import { Toaster } from 'sonner';
+import OnboardingModal from '@/components/OnboardingModal';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -34,17 +37,21 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const categories = await getCategories();
+
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
-      <body className={playfair.className}>
+    <html lang="en" className={`${inter.variable} ${playfair.variable}`} data-scroll-behavior="smooth">
+      <body className={playfair.className} suppressHydrationWarning>
+        <Toaster position="bottom-right" richColors />
         <AuthProvider>
           <CartProvider>
-            <Header />
+            <Header initialCategories={categories} />
+            <OnboardingModal />
             {children}
             <Footer />
           </CartProvider>

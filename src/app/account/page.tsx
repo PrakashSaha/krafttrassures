@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 import {
   PackageIcon,
@@ -12,29 +13,76 @@ import {
   ClockIcon
 } from '@/components/AccountIcons';
 
-const STATS = [
-  { label: 'Total Orders', value: 0, color: 'text-[#D33740]', icon: <PackageIcon /> },
-  { label: 'Wishlist Items', value: 3, color: 'text-[#C5AB7D]', icon: <HeartIcon /> },
-  { label: 'Saved Addresses', value: 0, color: 'text-black/30', icon: <MapPinIcon /> },
-];
-
 const QUICK_LINKS = [
   { label: 'Browse Products', desc: 'Explore our heritage catalog', href: '/shop', icon: <ShopIcon /> },
   { label: 'My Transactions', desc: 'View payment history', href: '/account/transactions', icon: <CreditCardIcon /> },
   { label: 'Manage Addresses', desc: 'Add or edit shipping details', href: '/account/address', icon: <MapPinIcon /> },
 ];
 
+
+import { useAuth } from '@/context/AuthContext';
+import { useEffect, useState } from 'react';
+import { fetchAPI } from '@/lib/api';
+import { Order } from '@/lib/types';
+
 export default function DashboardPage() {
+  const { user, wishlist } = useAuth();
+  const [addressCount, setAddressCount] = useState(0);
+  const [ordersCount, setOrdersCount] = useState(0);
+  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+
+  useEffect(() => {
+    if (!user?.jwt || !user?.id) return;
+
+    // Fetch Address Count
+    fetchAPI('/api/addresses', {
+      token: user.jwt,
+      params: { 'filters[user][id][$eq]': user.id }
+    })
+      .then(data => {
+        if (data?.data) setAddressCount(data.data.length);
+      })
+      .catch(console.error);
+
+    // Fetch Orders Count & Recent
+    fetchAPI('/api/orders', {
+      token: user.jwt,
+      params: {
+        'filters[user][id][$eq]': user.id,
+        'sort': 'createdAt:desc',
+        'pagination[limit]': '3'
+      }
+    })
+      .then(data => {
+        if (data?.data) {
+          setOrdersCount(data.meta?.pagination?.total || data.data.length);
+          setRecentOrders(data.data);
+        }
+      })
+      .catch(console.error);
+  }, [user]);
+
+  const STATS = [
+    { label: 'Total Orders', value: ordersCount, color: 'text-[#D33740]', icon: <PackageIcon /> },
+    { label: 'Wishlist Items', value: wishlist.length, color: 'text-[#C5AB7D]', icon: <HeartIcon /> },
+    { label: 'Saved Addresses', value: addressCount, color: 'text-black/30', icon: <MapPinIcon /> },
+  ];
   return (
     <div className="space-y-8">
       {/* Hero Banner */}
       <div className="relative overflow-hidden bg-black p-10 lg:p-14">
         <div className="absolute inset-0 opacity-20">
-          <img src="/images/img_93892b41c09914ab339b71a95c773150.png" alt="BG" className="h-full w-full object-cover" />
+          <Image 
+            src="/images/img_93892b41c09914ab339b71a95c773150.png" 
+            alt="BG" 
+            fill
+            className="object-cover" 
+            sizes="100vw"
+          />
         </div>
         <div className="relative z-10">
           <p className="mb-3 text-[10px] font-bold tracking-[0.4em] text-[#C5AB7D] uppercase">Welcome Back</p>
-          <h1 className="mb-4 font-serif text-3xl text-white lg:text-5xl">Pifoba Pifoba</h1>
+          <h1 className="mb-4 font-serif text-3xl text-white lg:text-5xl">{user?.firstName ? `${user.firstName} ${user.lastName || ''}` : user?.username || 'Guest'}</h1>
           <p className="max-w-md text-[14px] leading-relaxed text-white/50">
             Manage your curated collections, track your heritage artifacts, and update your personal profile.
           </p>
@@ -65,9 +113,40 @@ export default function DashboardPage() {
             View All <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </Link>
         </div>
-        <div className="px-8 py-16 text-center">
-          <p className="text-[14px] text-black/30 font-medium italic">You haven't placed any orders yet.</p>
-        </div>
+        
+        {recentOrders.length === 0 ? (
+          <div className="px-8 py-16 text-center">
+            <p className="text-[14px] text-black/30 font-medium italic">You haven't placed any orders yet.</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-black/5">
+            {recentOrders.map((order: any) => {
+              const statusColors: Record<string, string> = {
+                'Pending': 'bg-[#C5AB7D]/10 text-[#C5AB7D]',
+                'Paid': 'bg-[#14a839]/10 text-[#14a839]',
+                'Failed': 'bg-[#D33740]/10 text-[#D33740]',
+                'Refunded': 'bg-black/10 text-black'
+              };
+              const statusStr = order.attributes?.paymentStatus || order.paymentStatus || 'Pending';
+              const colorClass = statusColors[statusStr] || statusColors['Pending'];
+              
+              return (
+                <div key={order.documentId || order.id} className="flex items-center justify-between px-8 py-6 hover:bg-[#FAF7F2] transition-colors">
+                  <div>
+                    <p className="font-serif text-lg text-black mb-1">Order #{order.attributes?.orderId || order.orderId}</p>
+                    <p className="text-[12px] text-black/40">{new Date(order.attributes?.createdAt || order.createdAt).toLocaleDateString()}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-serif text-lg text-black mb-2">₹{order.attributes?.totalAmount || order.totalAmount}</p>
+                    <span className={`px-3 py-1 text-[9px] font-bold tracking-[0.2em] uppercase ${colorClass}`}>
+                      {statusStr}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Quick links */}

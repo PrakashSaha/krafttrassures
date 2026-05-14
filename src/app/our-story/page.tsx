@@ -1,9 +1,14 @@
-'use client';
-
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { getProducts, getStorySteps } from '@/lib/strapi';
 
-export default function OurStory() {
+export default async function OurStory() {
+  const [featuredProducts, storySteps] = await Promise.all([
+    getProducts({ 'pagination[pageSize]': 3 }),
+    getStorySteps()
+  ]);
+
   return (
     <div className="min-h-screen bg-[#FAF7F2]">
       <main>
@@ -25,7 +30,7 @@ export default function OurStory() {
               </p>
               <Link
                 href="/shop"
-                className="btn-primary"
+                className="group relative inline-flex items-center justify-center gap-2 bg-[#D33740] px-10 py-5 font-sans text-[11px] font-bold tracking-[0.3em] text-white uppercase transition-all hover:bg-black hover:text-white active:scale-[0.98]"
               >
                 Collect The Pieces
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-1"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
@@ -35,17 +40,21 @@ export default function OurStory() {
             {/* RIGHT: Overlapping Images */}
             <div className="relative min-h-[500px] flex-1 animate-in fade-in slide-in-from-right-8 duration-1000 delay-300">
               <div className="absolute top-0 right-0 z-10 aspect-[4/5] w-[75%] overflow-hidden shadow-2xl">
-                <img
+                <Image
                   src="/images/img_93892b41c09914ab339b71a95c773150.png"
                   alt="Mountain Craft"
-                  className="h-full w-full object-cover transition-transform duration-2000 hover:scale-105"
+                  fill
+                  className="object-cover transition-transform duration-2000 hover:scale-105"
+                  sizes="(max-width: 768px) 75vw, 40vw"
                 />
               </div>
               <div className="absolute top-[60px] left-0 z-20 aspect-square w-[55%] shadow-2xl overflow-hidden border-4 border-white">
-                <img
+                <Image
                   src="/images/img_b6b893bf9561c378a643cae02ba8ff63.png"
                   alt="Craft Detail"
-                  className="h-full w-full object-cover transition-transform duration-2000 hover:scale-110"
+                  fill
+                  className="object-cover transition-transform duration-2000 hover:scale-110"
+                  sizes="(max-width: 768px) 55vw, 30vw"
                 />
               </div>
               <div className="absolute right-[-20px] bottom-0 z-30 w-[260px] bg-white p-8 shadow-2xl md:right-[-40px] animate-in fade-in slide-in-from-bottom-4 duration-700 delay-700">
@@ -93,12 +102,24 @@ export default function OurStory() {
             </div>
 
             <div className="flex gap-4 lg:w-[60%] h-[520px] animate-in fade-in slide-in-from-right-8 duration-1000 delay-400">
-              <div className="flex-[1.8] overflow-hidden">
-                <img src="/images/img_5b2209901953523b207d60b90672822f.jpeg" alt="Artisan" className="h-full w-full object-cover transition-transform duration-2000 hover:scale-105" />
+              <div className="flex-[1.8] overflow-hidden relative">
+                <Image 
+                  src="/images/img_5b2209901953523b207d60b90672822f.jpeg" 
+                  alt="Artisan" 
+                  fill
+                  className="object-cover transition-transform duration-2000 hover:scale-105" 
+                  sizes="(max-width: 768px) 100vw, 40vw"
+                />
               </div>
               <div className="flex flex-1 flex-col gap-4">
-                <div className="h-[240px] overflow-hidden">
-                  <img src="/images/img_d81156df7b760918a15333587af8dc1b.png" alt="Detail" className="h-full w-full object-cover transition-transform duration-2000 hover:scale-110" />
+                <div className="h-[240px] overflow-hidden relative">
+                  <Image 
+                    src="/images/img_d81156df7b760918a15333587af8dc1b.png" 
+                    alt="Detail" 
+                    fill
+                    className="object-cover transition-transform duration-2000 hover:scale-110" 
+                    sizes="(max-width: 768px) 50vw, 20vw"
+                  />
                 </div>
                 <div className="flex-1 bg-[#FAF7F2] p-8 border border-black/5">
                   <p className="mb-3 text-[9px] font-bold tracking-widest text-[#C5AB7D] uppercase">What We Protect</p>
@@ -109,9 +130,25 @@ export default function OurStory() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 border border-black/5">
-            <MethodCard num="01" title="Begin With Listening" desc="We study how an object is used, who makes it, and which parts of the tradition must remain intact." bg="bg-black" text="text-white" accent="bg-[#C5AB7D]" />
-            <MethodCard num="02" title="Edit With Restraint" desc="We refine the presentation without redesigning the culture, symbolism, or logic behind the piece." bg="bg-white" text="text-black" accent="bg-[#D33740]" />
-            <MethodCard num="03" title="Return Value To Source" desc="Value flows back through fair compensation, proper attribution, and long-term respect for the maker." bg="bg-[#FAF7F2]" text="text-black" accent="bg-black" />
+            {storySteps.length > 0 ? (
+              storySteps.map((step: any, idx: number) => (
+                <MethodCard 
+                  key={step.id}
+                  num={String(idx + 1).padStart(2, '0')} 
+                  title={step.title} 
+                  desc={step.desc} 
+                  bg={idx === 0 ? "bg-black" : idx === 1 ? "bg-white" : "bg-[#FAF7F2]"} 
+                  text={idx === 0 ? "text-white" : "text-black"} 
+                  accent={idx === 0 ? "bg-[#C5AB7D]" : idx === 1 ? "bg-[#D33740]" : "bg-black"} 
+                />
+              ))
+            ) : (
+              <>
+                <MethodCard num="01" title="Begin With Listening" desc="We study how an object is used, who makes it, and which parts of the tradition must remain intact." bg="bg-black" text="text-white" accent="bg-[#C5AB7D]" />
+                <MethodCard num="02" title="Edit With Restraint" desc="We refine the presentation without redesigning the culture, symbolism, or logic behind the piece." bg="bg-white" text="text-black" accent="bg-[#D33740]" />
+                <MethodCard num="03" title="Return Value To Source" desc="Value flows back through fair compensation, proper attribution, and long-term respect for the maker." bg="bg-[#FAF7F2]" text="text-black" accent="bg-black" />
+              </>
+            )}
           </div>
         </section>
 
@@ -120,7 +157,14 @@ export default function OurStory() {
           <div className="mx-auto max-w-[1440px]">
             <div className="flex flex-col lg:flex-row">
               <div className="relative lg:w-[38%] min-h-[780px]">
-                <img src="/images/img_5272ad50803a3ab605149781d666fb4b.png" alt="Heritage" className="h-full w-full object-cover" />
+                <Image 
+                  src="/images/img_5272ad50803a3ab605149781d666fb4b.png" 
+                  alt="Heritage" 
+                  fill
+                  className="object-cover" 
+                  sizes="(max-width: 768px) 100vw, 40vw"
+                  priority
+                />
                 <div className="absolute inset-x-0 bottom-0 bg-black/90 p-10 text-white backdrop-blur-md">
                   <p className="mb-3 text-[9px] font-bold tracking-widest text-[#C5AB7D] uppercase">The Collective</p>
                   <p className="font-serif text-2xl leading-snug italic">"When craft is named properly, the maker is no longer invisible."</p>
@@ -137,10 +181,121 @@ export default function OurStory() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-                  <PhilosophyItem img="/images/img_24c6b995e700c5e6965658f7714891d6.png" title="Sacred Wall Banner" desc="A devotional hanging that carries ceremonial symbolism and handcrafted detail." />
-                  <PhilosophyItem img="/images/img_ea260192b5d5e7b46cb323470fd4fd8b.png" title="Lidded Tea Vessel" desc="A refined tabletop object shaped by ornament, utility, and everyday ritual." />
-                  <PhilosophyItem img="/images/img_f08cce93af6994ee70cdee826c34c554.png" title="Deity Relief" desc="A sculptural wall piece where spiritual iconography meets material richness." />
+                  {featuredProducts.map((p: any) => (
+                    <PhilosophyItem 
+                      key={p.id}
+                      img={p.image} 
+                      title={p.name} 
+                      desc={p.category} 
+                    />
+                  ))}
                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        {/* Section 5: Philosophy Section */}
+        <section className="overflow-hidden bg-[#FFF4B3]/28 py-16 lg:py-24">
+          <div className="mx-auto max-w-[1440px] px-6 lg:px-12">
+            <div className="grid gap-10 lg:grid-cols-[0.75fr_1.25fr] lg:gap-12">
+              <div>
+                <p className="text-[10px] font-sans uppercase tracking-[0.35em] text-[#D33740]">What We Stand For</p>
+                <h2 className="mt-4 text-4xl font-serif leading-tight text-black sm:text-5xl">Four Commitments Shape Every Decision On The Platform.</h2>
+                <p className="mt-5 max-w-md text-sm leading-7 text-black/65 md:text-base">
+                  These are not brand adjectives. They are operating rules that help us decide what belongs in the collection and how it should be presented.
+                </p>
+                <div className="mt-8 border-l-2 border-[#D33740] pl-5">
+                  <p className="text-[10px] font-sans uppercase tracking-[0.3em] text-black/45">Collector Promise</p>
+                  <p className="mt-3 text-lg font-serif leading-relaxed text-black">
+                    Every object should feel culturally grounded before it ever feels luxurious.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="grid gap-px overflow-hidden border border-black/10 bg-black/10 md:grid-cols-2">
+                <article className="group relative overflow-hidden bg-white">
+                  <div className="absolute inset-0 translate-y-full bg-[#D33740] transition-transform duration-500 ease-out group-hover:translate-y-0"></div>
+                  <div className="relative z-10 p-6 lg:p-8">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-none bg-[#D33740] text-white transition-colors duration-300 group-hover:bg-white group-hover:text-[#D33740]">
+                      <div className="relative h-6 w-6">
+                        <Image 
+                          src="https://apikt.aquaninjas.in/uploads/rz3y4b3cf7mnr1l37f_b0e3fa63f0.svg"
+                          alt="Verified provenance" 
+                          fill
+                          className="object-contain transition-all duration-300" 
+                          sizes="24px"
+                        />
+                      </div>
+                    </div>
+                    <h3 className="mt-5 text-2xl font-serif text-black transition-colors duration-300 group-hover:text-white">Verified provenance</h3>
+                    <p className="mt-4 text-sm leading-5 text-black/65 transition-colors duration-300 group-hover:text-white/88">
+                      We foreground authorship, origin, and narrative documentation so the object stays anchored to its source.
+                    </p>
+                  </div>
+                </article>
+
+                <article className="group relative overflow-hidden bg-white">
+                  <div className="absolute inset-0 translate-y-full bg-[#D33740] transition-transform duration-500 ease-out group-hover:translate-y-0"></div>
+                  <div className="relative z-10 p-6 lg:p-8">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-none bg-[#D33740] text-white transition-colors duration-300 group-hover:bg-white group-hover:text-[#D33740]">
+                      <div className="relative h-6 w-6">
+                        <Image 
+                          src="https://apikt.aquaninjas.in/uploads/o9ri6s1x58mnrg34f2_e67fd5079a.svg"
+                          alt="Respectful commerce" 
+                          fill
+                          className="object-contain transition-all duration-300" 
+                          sizes="24px"
+                        />
+                      </div>
+                    </div>
+                    <h3 className="mt-5 text-2xl font-serif text-black transition-colors duration-300 group-hover:text-white">Respectful commerce</h3>
+                    <p className="mt-4 text-sm leading-5 text-black/65 transition-colors duration-300 group-hover:text-white/88">
+                      Fair-value collaboration matters because preservation fails when the maker is under-recognized or underpaid.
+                    </p>
+                  </div>
+                </article>
+
+                <article className="group relative overflow-hidden bg-white">
+                  <div className="absolute inset-0 translate-y-full bg-[#D33740] transition-transform duration-500 ease-out group-hover:translate-y-0"></div>
+                  <div className="relative z-10 p-6 lg:p-8">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-none bg-[#D33740] text-white transition-colors duration-300 group-hover:bg-white group-hover:text-[#D33740]">
+                      <div className="relative h-6 w-6">
+                        <Image 
+                          src="https://apikt.aquaninjas.in/uploads/k3as8vfo53bmnrg3vmg_ef550ea23c.svg"
+                          alt="Material honesty" 
+                          fill
+                          className="object-contain transition-all duration-300" 
+                          sizes="24px"
+                        />
+                      </div>
+                    </div>
+                    <h3 className="mt-5 text-2xl font-serif text-black transition-colors duration-300 group-hover:text-white">Material honesty</h3>
+                    <p className="mt-4 text-sm leading-5 text-black/65 transition-colors duration-300 group-hover:text-white/88">
+                      Natural materials are not just visual choices. They are local knowledge systems shaped by geography and use.
+                    </p>
+                  </div>
+                </article>
+
+                <article className="group relative overflow-hidden bg-white">
+                  <div className="absolute inset-0 translate-y-full bg-[#D33740] transition-transform duration-500 ease-out group-hover:translate-y-0"></div>
+                  <div className="relative z-10 p-6 lg:p-8">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-none bg-[#D33740] text-white transition-colors duration-300 group-hover:bg-white group-hover:text-[#D33740]">
+                      <div className="relative h-6 w-6">
+                        <Image 
+                          src="https://apikt.aquaninjas.in/uploads/uvzftm51fxmnrg4ct9_2302d7c0bf.svg"
+                          alt="Modern presentation" 
+                          fill
+                          className="object-contain transition-all duration-300" 
+                          sizes="24px"
+                        />
+                      </div>
+                    </div>
+                    <h3 className="mt-5 text-2xl font-serif text-black transition-colors duration-300 group-hover:text-white">Modern presentation</h3>
+                    <p className="mt-4 text-sm leading-5 text-black/65 transition-colors duration-300 group-hover:text-white/88">
+                      Luxury for us means rigor, beauty, and curation without turning tradition into costume or trend theatre.
+                    </p>
+                  </div>
+                </article>
               </div>
             </div>
           </div>
@@ -150,7 +305,13 @@ export default function OurStory() {
         <section className="mx-auto max-w-[1440px] px-6 py-32 lg:px-20">
           <div className="relative overflow-hidden bg-black px-10 py-24 text-center lg:text-left">
             <div className="absolute inset-0 opacity-20">
-              <img src="/images/img_93892b41c09914ab339b71a95c773150.png" alt="BG" className="h-full w-full object-cover" />
+              <Image 
+                src="/images/img_93892b41c09914ab339b71a95c773150.png" 
+                alt="BG" 
+                fill
+                className="object-cover" 
+                sizes="100vw"
+              />
             </div>
             <div className="relative z-10 flex flex-col items-center justify-between gap-12 lg:flex-row">
               <div className="lg:max-w-2xl">
@@ -161,22 +322,23 @@ export default function OurStory() {
                 </p>
               </div>
               <div className="flex flex-col gap-4 min-w-[240px]">
-                <Link href="/shop" className="btn-primary w-full">Browse Collection</Link>
-                <Link href="/contact" className="btn-outline w-full text-white border-white/20 hover:bg-white hover:text-black">Contact The Team</Link>
+                <Link 
+                  href="/shop" 
+                  className="group relative inline-flex items-center justify-center gap-2 bg-[#D33740] px-10 py-5 font-sans text-[11px] font-bold tracking-[0.3em] text-white uppercase transition-all hover:bg-black hover:text-white active:scale-[0.98] w-full"
+                >
+                  Browse Collection
+                </Link>
+                <Link 
+                  href="/contact" 
+                  className="inline-flex items-center justify-center border border-white/20 px-10 py-5 font-sans text-[11px] font-bold tracking-[0.3em] uppercase transition-all active:scale-[0.98] w-full text-white hover:bg-white hover:text-black"
+                >
+                  Contact The Team
+                </Link>
               </div>
             </div>
           </div>
         </section>
       </main>
-
-      <style jsx>{`
-        .btn-primary {
-          @apply group relative inline-flex items-center justify-center gap-2 bg-[#D33740] px-10 py-5 font-sans text-[11px] font-bold tracking-[0.3em] text-white uppercase transition-all hover:bg-white hover:text-black active:scale-[0.98];
-        }
-        .btn-outline {
-          @apply inline-flex items-center justify-center border border-black/10 px-10 py-5 font-sans text-[11px] font-bold tracking-[0.3em] uppercase transition-all active:scale-[0.98];
-        }
-      `}</style>
     </div>
   );
 }
@@ -209,8 +371,14 @@ function MethodCard({ num, title, desc, bg, text, accent }: any) {
 function PhilosophyItem({ img, title, desc }: any) {
   return (
     <div className="flex flex-col group">
-      <div className="mb-5 aspect-[4/5] overflow-hidden">
-        <img src={img} alt={title} className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-105" />
+      <div className="mb-5 aspect-[4/5] overflow-hidden relative">
+        <Image 
+          src={img} 
+          alt={title} 
+          fill
+          className="object-cover transition-transform duration-1000 group-hover:scale-105" 
+          sizes="(max-width: 768px) 100vw, 33vw"
+        />
       </div>
       <h5 className="mb-2 font-serif text-lg">{title}</h5>
       <p className="text-[12px] leading-relaxed text-black/50">{desc}</p>

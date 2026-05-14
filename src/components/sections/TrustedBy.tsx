@@ -10,7 +10,7 @@ const VALUES = [
 
 export default function TrustedBy() {
   return (
-    <section className="bg-[#FAF7F2] px-6 py-20 border-y border-black/5">
+    <section className="bg-[#FFF4B3] px-6 py-20 border-y border-black/5">
       <div className="mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center text-center">
         <h2 className="mb-8 font-serif text-3xl text-black md:text-4xl lg:text-5xl animate-in fade-in slide-in-from-bottom-4 duration-1000">
           Trusted by Customers

@@ -1,11 +1,15 @@
-'use client';
-
 import React from 'react';
+import Image from 'next/image';
 
-import { INSTAGRAM_POSTS } from '@/lib/data';
+interface InstagramPost {
+  id: number | string;
+  image: string;
+  link: string;
+}
 
+export default function Instagram({ posts }: { posts?: InstagramPost[] }) {
+  const displayPosts = posts && posts.length > 0 ? posts : [];
 
-export default function Instagram() {
   return (
     <section className="mx-auto w-full max-w-[1440px] px-6 py-20 lg:px-12">
       {/* Header */}
@@ -15,7 +19,7 @@ export default function Instagram() {
         </p>
         <h2 className="mb-8 font-serif text-3xl text-black md:text-4xl lg:text-5xl">Shared on Instagram</h2>
         <a
-          href="https://www.instagram.com/p/DBh8wHjP9S-/"
+          href="https://www.instagram.com/"
           target="_blank"
           rel="noopener noreferrer"
           className="btn-primary group"
@@ -27,16 +31,20 @@ export default function Instagram() {
 
       {/* Grid */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:gap-6">
-        {INSTAGRAM_POSTS.map((post) => (
-          <div
+        {displayPosts.map((post) => (
+          <a
             key={post.id}
+            href={post.link}
+            target="_blank"
+            rel="noopener noreferrer"
             className="group relative aspect-square overflow-hidden bg-zinc-100"
-            style={{ transitionDelay: post.delay }}
           >
-            <img
+            <Image
               src={post.image}
               alt={`Instagram post ${post.id}`}
-              className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110"
+              fill
+              className="object-cover transition-transform duration-1000 group-hover:scale-110"
+              sizes="(max-width: 768px) 50vw, 25vw"
             />
             <div className="absolute inset-0 flex translate-y-full items-center justify-center bg-black/40 backdrop-blur-[2px] transition-transform duration-500 ease-in-out group-hover:translate-y-0">
               <svg
@@ -56,7 +64,7 @@ export default function Instagram() {
                 <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
               </svg>
             </div>
-          </div>
+          </a>
         ))}
       </div>
 

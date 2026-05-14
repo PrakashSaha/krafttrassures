@@ -1,7 +1,6 @@
-'use client';
-
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 import { ADORNMENTS_DATA } from '@/lib/data';
 
@@ -35,10 +34,12 @@ export default function Adornments() {
 function AdornmentCard({ title, subtitle, priceText, image, href, large }: AdornmentCardProps) {
   return (
     <div className={`group relative overflow-hidden bg-zinc-100 ${large ? 'h-[500px] lg:h-full' : 'min-h-[300px] flex-1'}`}>
-      <img
+      <Image
         src={image}
         alt={title}
-        className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-110"
+        fill
+        className="object-cover transition-transform duration-1000 group-hover:scale-110"
+        sizes="(max-width: 1024px) 100vw, 50vw"
       />
       <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity duration-500 group-hover:opacity-90" />
       <div className="absolute inset-8 z-20 flex flex-col justify-end text-white">
