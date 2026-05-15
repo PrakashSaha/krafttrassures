@@ -215,6 +215,7 @@ export const getProducts = cache(async (params?: Record<string, any>): Promise<P
       image: getStrapiMedia(data.image),
       hoverImage: Array.isArray(data.image) && data.image.length > 1 ? getStrapiMedia(data.image[1]) : null,
       href: `/product/${data.slug}`,
+      stock: data.quantity || 0,
     };
   });
 });
@@ -246,6 +247,7 @@ export const getProductsWithMeta = cache(async (params?: Record<string, any>): P
       image: getStrapiMedia(data.image),
       hoverImage: Array.isArray(data.image) && data.image.length > 1 ? getStrapiMedia(data.image[1]) : null,
       href: `/product/${data.slug}`,
+      stock: data.quantity || 0,
     };
   });
 
@@ -278,7 +280,8 @@ export const getProductBySlug = cache(async (slug: string): Promise<Product | nu
     thumbnails: imageUrls,
     material: data.material || 'Traditional Materials',
     origin: data.origin || 'Arunachal Pradesh',
-    availability: data.availability === 'out_of_stock' ? 'Sold Out' : 'In Stock',
+    availability: (data.quantity === 0 || data.availability === 'out_of_stock') ? 'Sold Out' : 'In Stock',
+    stock: data.quantity || 0,
     description: data.description || '',
     fullDescription: data.description || '',
     href: `/product/${data.slug}`,

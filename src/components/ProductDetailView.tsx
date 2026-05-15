@@ -120,9 +120,16 @@ export default function ProductDetailView({
                   <span className="text-[36px]">₹</span>
                   <span className="text-[38px] ml-1">{typeof product.price === 'number' ? product.price.toLocaleString('en-IN') : String(product.price).replace('₹', '')}</span>
                 </p>
-                <span className="bg-[#D6F0DD] text-[#1A6B30] rounded-full px-3 py-1 text-[10px] font-bold tracking-widest uppercase">
-                  {product.availability || 'In Stock'}
+                <span className={`rounded-full px-3 py-1 text-[10px] font-bold tracking-widest uppercase ${
+                  product.stock === 0 ? 'bg-red-100 text-red-600' : 'bg-[#D6F0DD] text-[#1A6B30]'
+                }`}>
+                  {product.stock === 0 ? 'Sold Out' : (product.availability || 'In Stock')}
                 </span>
+                {product.stock !== undefined && product.stock > 0 && product.stock <= 5 && (
+                  <span className="text-[10px] font-bold tracking-widest text-[#D33740] uppercase animate-pulse">
+                    Only {product.stock} left in stock!
+                  </span>
+                )}
               </div>
             </div>
 
@@ -140,15 +147,21 @@ export default function ProductDetailView({
               <div className="flex h-16 items-center border border-[#C8C3BB] bg-white shadow-sm shrink-0">
                 <QuantityBtn label="-" onClick={() => setQuantity(Math.max(1, quantity - 1))} />
                 <span className="w-12 text-center font-bold text-sm">{quantity}</span>
-                <QuantityBtn label="+" onClick={() => setQuantity(quantity + 1)} />
+                <QuantityBtn 
+                  label="+" 
+                  onClick={() => setQuantity(Math.min(product.stock || 99, quantity + 1))} 
+                  disabled={product.stock !== undefined && quantity >= product.stock}
+                />
               </div>
 
               <button 
                 onClick={handleAddToCart}
-                className={`btn-primary flex-1 group h-16 bg-[#8C6E3F] text-white text-[11px] font-bold tracking-[0.2em] uppercase transition-all hover:bg-black ${isAdding ? 'bg-black' : ''}`}
-                disabled={isAdding}
+                className={`btn-primary flex-1 group h-16 text-white text-[11px] font-bold tracking-[0.2em] uppercase transition-all 
+                  ${product.stock === 0 ? 'bg-gray-400 cursor-not-allowed hover:bg-gray-400' : 'bg-[#8C6E3F] hover:bg-black'} 
+                  ${isAdding ? 'bg-black' : ''}`}
+                disabled={isAdding || product.stock === 0}
               >
-                {isAdding ? 'Added to Collection' : 'Add To Collection'}
+                {product.stock === 0 ? 'Out of Stock' : (isAdding ? 'Added to Collection' : 'Add To Collection')}
               </button>
 
               <button

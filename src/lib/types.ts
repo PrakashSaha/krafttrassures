@@ -14,6 +14,7 @@ export interface Product {
   description?: string;
   fullDescription?: string;
   thumbnails?: string[];
+  stock?: number;
 }
 
 export interface WishlistProduct extends Product {
