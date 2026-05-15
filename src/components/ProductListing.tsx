@@ -8,6 +8,7 @@ import SortFilter from './SortFilter';
 import SearchFilter from './SearchFilter';
 import GridToggle from './GridToggle';
 import Link from 'next/link';
+import Pagination from './Pagination';
 import { Product, Category } from '@/lib/types';
 
 interface ProductListingProps {
@@ -20,6 +21,8 @@ interface ProductListingProps {
   gridCols: string;
   searchQuery: string;
   totalFound: number;
+  pageCount: number;
+  currentPage: number;
 }
 
 export default function ProductListing({
@@ -31,18 +34,28 @@ export default function ProductListing({
   initialMax = '',
   gridCols,
   searchQuery,
-  totalFound
+  totalFound,
+  pageCount,
+  currentPage
 }: ProductListingProps) {
   const [minPrice, setMinPrice] = useState(initialMin);
   const [maxPrice, setMaxPrice] = useState(initialMax);
   const [cols, setCols] = useState(gridCols);
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  // Sync state with props when they change (e.g. on navigation)
+  // Sync state and manage loading state when products change
   useEffect(() => {
+    // If we were updating, ensure a minimum smooth transition
+    const timer = setTimeout(() => {
+      setIsUpdating(false);
+    }, 600);
+
     setMinPrice(initialMin);
     setMaxPrice(initialMax);
     setCols(gridCols);
-  }, [initialMin, initialMax, gridCols]);
+
+    return () => clearTimeout(timer);
+  }, [initialProducts, initialMin, initialMax, gridCols]);
 
   const products = initialProducts;
 
@@ -66,7 +79,7 @@ export default function ProductListing({
             {/* Categories */}
             <section>
               <p className="text-[10px] tracking-[0.3em] uppercase text-[#3A3530] font-sans mb-3">Categories</p> {/* // CONTRAST FIX */}
-              <CategoryFilter categories={categories} />
+              <CategoryFilter categories={categories} onStartUpdate={() => setIsUpdating(true)} />
             </section>
 
             {/* Availability */}
@@ -94,6 +107,7 @@ export default function ProductListing({
                 setMinPrice(min);
                 setMaxPrice(max);
               }}
+              onStartUpdate={() => setIsUpdating(true)}
             />
           </div>
         </div>
@@ -108,17 +122,26 @@ export default function ProductListing({
           </div>
           
           <div className="flex-1 min-w-0 px-0 lg:px-8">
-            <SearchFilter />
+            <SearchFilter onStartUpdate={() => setIsUpdating(true)} />
           </div>
 
           <div className="flex items-center gap-8 lg:border-l lg:border-[#C8C3BB] lg:pl-8"> {/* // CONTRAST FIX */}
-            <SortFilter />
+            <SortFilter onStartUpdate={() => setIsUpdating(true)} />
             <GridToggle currentCols={cols} onToggle={setCols} />
           </div>
         </section>
 
-        {/* Product Grid */}
-        <div className={`grid grid-cols-2 gap-6 lg:gap-8 ${cols === '3' ? 'lg:grid-cols-3' : 'lg:grid-cols-3 xl:grid-cols-4'}`}>
+        {/* Product Grid with Loading Overlay */}
+        <div className="relative">
+          {isUpdating && (
+            <div className="absolute inset-0 z-50 flex items-start justify-center pt-32 bg-white/60 backdrop-blur-[2px] transition-all duration-300">
+              <div className="flex flex-col items-center gap-4">
+                <div className="h-10 w-10 animate-spin rounded-full border-2 border-[#C5AB7D] border-t-transparent" />
+                <p className="text-[10px] font-bold tracking-[0.3em] text-black uppercase animate-pulse">Updating Archive...</p>
+              </div>
+            </div>
+          )}
+          <div className={`grid grid-cols-2 gap-6 lg:gap-8 transition-all duration-700 ${isUpdating ? 'opacity-20 translate-y-2' : 'opacity-100 translate-y-0 animate-in fade-in slide-in-from-bottom-2'} ${cols === '3' ? 'lg:grid-cols-3' : 'lg:grid-cols-3 xl:grid-cols-4'}`}>
           {products.length > 0 ? (
             products.map((p) => (
               <ProductCard key={p.id} product={p} />
@@ -131,6 +154,15 @@ export default function ProductListing({
               </Link>
             </div>
           )}
+        </div>
+      </div>
+
+        <div className={`mt-16 transition-opacity duration-300 ${isUpdating ? 'opacity-30' : 'opacity-100'}`}>
+          <Pagination 
+            pageCount={pageCount} 
+            currentPage={currentPage} 
+            onStartUpdate={() => setIsUpdating(true)} 
+          />
         </div>
       </div>
     </div>

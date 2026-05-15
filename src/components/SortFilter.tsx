@@ -3,13 +3,14 @@
 import React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function SortFilter() {
+export default function SortFilter({ onStartUpdate }: { onStartUpdate?: () => void }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentSort = searchParams.get('sort') || 'newest';
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
+    onStartUpdate?.();
     const params = new URLSearchParams(searchParams.toString());
     params.set('sort', value);
     params.delete('page'); // Reset to page 1

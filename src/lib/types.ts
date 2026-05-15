@@ -1,8 +1,7 @@
 export interface Product {
   id: string | number;
-  documentId?: string;
+  productId: string;
   name: string;
-  slug: string;
   category: string;
   price: number;
   image: string | null;
@@ -10,6 +9,8 @@ export interface Product {
   href: string;
   material?: string;
   origin?: string;
+  otherOrigin?: string;
+  size?: string;
   availability?: string;
   description?: string;
   fullDescription?: string;

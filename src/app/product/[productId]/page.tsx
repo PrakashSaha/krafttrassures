@@ -1,12 +1,12 @@
-import { getProductBySlug } from '@/lib/strapi';
+import { getProductById } from '@/lib/strapi';
 import ProductDetailView from '@/components/ProductDetailView';
 import Link from 'next/link';
 import Topbar from '@/components/sections/Topbar';
 import { Metadata } from 'next';
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params;
-  const product = await getProductBySlug(slug);
+export async function generateMetadata({ params }: { params: Promise<{ productId: string }> }): Promise<Metadata> {
+  const { productId } = await params;
+  const product = await getProductById(productId);
 
   if (!product) {
     return {
@@ -25,9 +25,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-export default async function ProductDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const product = await getProductBySlug(slug);
+export default async function ProductDetailsPage({ params }: { params: Promise<{ productId: string }> }) {
+  const { productId } = await params;
+  const product = await getProductById(productId);
 
   if (!product) {
     return (
@@ -47,7 +47,7 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
   const { getProducts } = await import('@/lib/strapi');
   const relatedProducts = await getProducts({
     'filters[categories][label][$eq]': product.category,
-    'filters[slug][$ne]': product.slug, // Don't show current product
+    'filters[documentId][$ne]': product.productId, // Don't show current product
     'pagination[pageSize]': 4
   });
 

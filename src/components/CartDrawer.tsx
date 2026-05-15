@@ -91,7 +91,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               </Link>
             </div>
           ) : (
-            <div className="flex-1 divide-y divide-[#C8C3BB] px-6"> {/* // CONTRAST FIX */}
+            <div className="flex-1 divide-y divide-[#C8C3BB] px-6 animate-in fade-in slide-in-from-right-4 duration-500">
               {cart.map((item) => (
                 <div key={item.id} className="flex items-start gap-4 py-6">
                   <div className="relative h-24 w-20 flex-shrink-0 overflow-hidden bg-zinc-100 border border-[#C8C3BB]">

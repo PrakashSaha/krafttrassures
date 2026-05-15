@@ -64,8 +64,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (data?.data) {
             const remoteCart: CartItem[] = data.data.map((item: any) => ({
               id: item.product?.id,
-              documentId: item.product?.documentId,
-              slug: item.product?.slug,
+              productId: item.product?.productId || item.product?.documentId,
               name: item.product?.name,
               category: item.product?.category,
               price: item.product?.price,
@@ -127,7 +126,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           const body = {
             data: {
-              product: product.documentId || product.id,
+              product: product.productId || product.id,
               user: user.documentId || user.id,
               quantity: quantity,
               added_at: new Date().toISOString()
@@ -254,7 +253,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 unit_price: item.price,
                 total_price: item.price * item.qty,
                 product_name: item.name,
-                product: item.documentId || item.id,
+                product: item.productId || item.id,
                 order: orderId,
                 user: userId,
                 added_at: new Date().toISOString(),
@@ -288,11 +287,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (cart.length === 0) return { hasIssue: false, issues: [] };
 
     try {
-      const productIds = cart.map(item => item.documentId || item.id).filter(Boolean);
+      const productIds = cart.map(item => item.productId || item.id).filter(Boolean);
       
       const res = await fetchAPI('/products', {
         params: {
-          'filters[documentId][$in]': productIds,
+          'filters[productId][$in]': productIds,
           'fields': ['name', 'quantity']
         }
       });
@@ -302,7 +301,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       for (const cartItem of cart) {
         const liveProduct = latestProducts.find((p: any) => 
-          (p.documentId && p.documentId === cartItem.documentId) || (p.id && p.id === cartItem.id)
+          (p.productId && p.productId === cartItem.productId) || (p.id && p.id === cartItem.id)
         );
         
         // Strapi v5 often flattens attributes

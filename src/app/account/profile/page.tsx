@@ -36,7 +36,7 @@ export default function ProfilePage() {
         return;
       }
       try {
-        const resData = await fetchAPI('/api/users/me?populate=*', {
+        const resData = await fetchAPI('/api/users/me?fields=firstName,lastName,email,phone', {
           token: user.jwt
         });
         

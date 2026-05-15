@@ -8,13 +8,14 @@ interface Category {
   slug: string;
 }
 
-export default function CategoryFilter({ categories }: { categories: Category[] }) {
+export default function CategoryFilter({ categories, onStartUpdate }: { categories: Category[], onStartUpdate?: () => void }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentCategory = searchParams.get('category') || '';
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
+    onStartUpdate?.();
     const params = new URLSearchParams(searchParams.toString());
     if (value) {
       params.set('category', value);

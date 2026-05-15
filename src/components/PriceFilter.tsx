@@ -7,6 +7,7 @@ interface PriceFilterProps {
   absoluteMin: number;
   absoluteMax: number;
   onPriceChange?: (min: string, max: string) => void;
+  onStartUpdate?: () => void;
   initialMin?: string;
   initialMax?: string;
 }
@@ -15,6 +16,7 @@ export default function PriceFilter({
   absoluteMin, 
   absoluteMax, 
   onPriceChange,
+  onStartUpdate,
   initialMin = '',
   initialMax = ''
 }: PriceFilterProps) {
@@ -51,17 +53,16 @@ export default function PriceFilter({
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       const params = new URLSearchParams(searchParams.toString());
-      
-      const currentMin = searchParams.get('min') || '';
-      const currentMax = searchParams.get('max') || '';
 
       if (min !== "" && minVal !== absoluteMin) params.set('min', minVal.toString()); else params.delete('min');
       if (max !== "" && maxVal !== absoluteMax) params.set('max', maxVal.toString()); else params.delete('max');
 
       // Reset to page 1 when filtering to avoid "Empty Page" confusion
-      if (params.get('min') !== currentMin || params.get('max') !== currentMax) {
+      // Reset to page 1 ONLY if the price filters actually changed
+      if (params.get('min') !== searchParams.get('min') || params.get('max') !== searchParams.get('max')) {
+        onStartUpdate?.();
         params.delete('page');
-        router.push(`/shop?${params.toString()}`, { scroll: false });
+        router.replace(`/shop?${params.toString()}`, { scroll: false });
       }
     }, 400); // Drastically reduced from 1500ms to 400ms for responsiveness
 

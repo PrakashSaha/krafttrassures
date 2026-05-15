@@ -175,15 +175,12 @@ export const getHeroSliders = cache(async () => {
     if (!Array.isArray(products)) return [];
 
     return products.map((product: any) => {
-      // Ensure we have a valid slug before generating a slide
-      if (!product.slug) return null;
-
       return {
         title: data.title || "Kraft Treasure",
         subtitle: data.subtitle || "Authentic Arunachal Pradesh Handicrafts",
         name: product.name || 'Untitled Piece',
         img: getStrapiMedia(product.image),
-        href: `/product/${product.slug}`, 
+        href: `/product/${product.documentId}`, 
       };
     }).filter(Boolean);
   });
@@ -207,15 +204,15 @@ export const getProducts = cache(async (params?: Record<string, any>): Promise<P
     
     return {
       id: data.id,
-      documentId: data.documentId,
+      productId: data.documentId,
       name: data.name,
-      slug: data.slug,
       category: extractCategoryLabel(data.categories),
       price: data.price,
       image: getStrapiMedia(data.image),
       hoverImage: Array.isArray(data.image) && data.image.length > 1 ? getStrapiMedia(data.image[1]) : null,
-      href: `/product/${data.slug}`,
+      href: `/product/${data.documentId}`,
       stock: data.quantity || 0,
+      availability: (data.quantity || 0) > 0 ? 'In Stock' : 'Sold Out',
     };
   });
 });
@@ -239,15 +236,15 @@ export const getProductsWithMeta = cache(async (params?: Record<string, any>): P
     
     return {
       id: data.id,
-      documentId: data.documentId,
+      productId: data.documentId,
       name: data.name,
-      slug: data.slug,
       category: extractCategoryLabel(data.categories),
       price: data.price,
       image: getStrapiMedia(data.image),
       hoverImage: Array.isArray(data.image) && data.image.length > 1 ? getStrapiMedia(data.image[1]) : null,
-      href: `/product/${data.slug}`,
+      href: `/product/${data.documentId}`,
       stock: data.quantity || 0,
+      availability: (data.quantity || 0) > 0 ? 'In Stock' : 'Sold Out',
     };
   });
 
@@ -255,38 +252,49 @@ export const getProductsWithMeta = cache(async (params?: Record<string, any>): P
 });
 
 /**
- * Fetch Single Product by Slug
+ * Fetch Single Product by ID (Uses Strapi documentId)
  */
-export const getProductBySlug = cache(async (slug: string): Promise<Product | null> => {
+export const getProductById = cache(async (productId: string): Promise<Product | null> => {
   const response = await fetchStrapi('products', {
-    'filters[slug][$eq]': slug,
+    'filters[documentId][$eq]': productId,
     populate: ['image', 'categories'],
   });
   
   if (!response?.data || response.data.length === 0) return null;
 
-  const data = flattenAttributes(response.data[0]);
+  return mapProduct(response.data[0]);
+});
+
+/**
+ * Internal helper to map Strapi product data to Product interface
+ */
+function mapProduct(item: any): Product {
+  const data = flattenAttributes(item);
   const images = Array.isArray(data.image) ? data.image : [data.image];
   const imageUrls = images.map(getStrapiMedia).filter(Boolean) as string[];
 
   return {
     id: data.id,
-    documentId: data.documentId,
+    productId: data.documentId,
     name: data.name,
-    slug: data.slug,
     category: extractCategoryLabel(data.categories),
     price: data.price,
     image: imageUrls[0] || null,
     thumbnails: imageUrls,
     material: data.material || 'Traditional Materials',
-    origin: data.origin || 'Arunachal Pradesh',
-    availability: (data.quantity === 0 || data.availability === 'out_of_stock') ? 'Sold Out' : 'In Stock',
+    origin: data.origin || data.otherOrigin || 'Arunachal Pradesh',
+    otherOrigin: data.otherOrigin,
+    size: data.Size,
+    availability: (data.quantity > 0) ? 'In Stock' : 'Sold Out',
     stock: data.quantity || 0,
     description: data.description || '',
-    fullDescription: data.description || '',
-    href: `/product/${data.slug}`,
+    fullDescription: data.LongDescription || '',
+    href: `/product/${data.documentId}`,
   };
-});
+}
+
+// Export as getProductBySlug for backward compatibility during transition if needed
+export const getProductBySlug = getProductById;
 
 /**
  * Fetch Categories

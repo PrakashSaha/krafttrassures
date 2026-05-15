@@ -96,9 +96,9 @@ export default async function ShopPage({
           gridCols={gridCols}
           searchQuery={searchQuery}
           totalFound={totalItems}
+          pageCount={pageCount}
+          currentPage={currentPage}
         />
-        
-        <Pagination pageCount={pageCount} currentPage={currentPage} />
       </main>
     </div>
   );

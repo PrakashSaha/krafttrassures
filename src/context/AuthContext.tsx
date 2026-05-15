@@ -61,14 +61,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           return {
             id: product.id,
-            documentId: product.documentId || pData.documentId,
+            productId: pData.productId || product.documentId || pData.documentId,
             wishlistId: wishlistId,
-            slug: pData.slug || '',
             name: pData.name || '',
             category: pData.category || 'Product',
             price: pData.price || 0,
             image: imgUrl,
-            href: `/product/${pData.slug || ''}`
+            href: `/product/${pData.productId || pData.documentId || product.documentId || ''}`
           };
         }).filter(Boolean);
         
@@ -198,7 +197,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const body = {
           data: {
             user: user.documentId || user.id,
-            product: product.documentId || product.id,
+            product: product.productId || product.id,
             added_at: new Date().toISOString()
           }
         };

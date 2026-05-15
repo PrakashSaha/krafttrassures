@@ -54,14 +54,14 @@ export default function AccountWishlistPage() {
                 className={`group border border-[#C8C3BB] bg-[#FAF7F2] p-5 transition-all hover:shadow-md hover:border-[#B0A99F] ${loadingItems.has(item.id) ? 'opacity-50 cursor-wait' : ''}`} // CONTRAST FIX
               >
                 <div className="flex gap-6">
-                  <Link href={`/product/${item.slug}`} className="shrink-0 overflow-hidden shadow-sm">
+                  <Link href={`/product/${item.productId}`} className="shrink-0 overflow-hidden shadow-sm">
                     <div className="relative h-[120px] w-[90px]">
                       <Image src={item.image} alt={item.name} fill className="object-cover transition-transform duration-700 group-hover:scale-110" sizes="90px" />
                     </div>
                   </Link>
                   <div className="min-w-0 flex-1 flex flex-col justify-between">
                     <div>
-                      <Link href={`/product/${item.slug}`}>
+                      <Link href={`/product/${item.productId}`}>
                         <h3 className="mb-1 line-clamp-2 font-serif text-[15px] text-black hover:text-[#D33740] transition-colors leading-snug">
                           {item.name}
                         </h3>

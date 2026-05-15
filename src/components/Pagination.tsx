@@ -7,9 +7,10 @@ import { usePathname, useSearchParams } from 'next/navigation';
 interface PaginationProps {
   pageCount: number;
   currentPage: number;
+  onStartUpdate?: () => void;
 }
 
-export default function Pagination({ pageCount, currentPage }: PaginationProps) {
+export default function Pagination({ pageCount, currentPage, onStartUpdate }: PaginationProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -37,6 +38,7 @@ export default function Pagination({ pageCount, currentPage }: PaginationProps) 
         <Link
           key={i}
           href={createPageUrl(i)}
+          onClick={() => onStartUpdate?.()}
           className={`flex h-10 w-10 items-center justify-center border text-[11px] font-bold tracking-widest transition-all ${
             currentPage === i
               ? 'border-black bg-black text-white'
@@ -55,6 +57,7 @@ export default function Pagination({ pageCount, currentPage }: PaginationProps) 
       {/* Previous Button */}
       <Link
         href={createPageUrl(Math.max(1, currentPage - 1))}
+        onClick={() => onStartUpdate?.()}
         className={`flex h-10 w-10 items-center justify-center border border-black/10 bg-white text-black transition-all hover:border-black ${
           currentPage === 1 ? 'pointer-events-none opacity-30' : ''
         }`}
@@ -71,6 +74,7 @@ export default function Pagination({ pageCount, currentPage }: PaginationProps) 
       {/* Next Button */}
       <Link
         href={createPageUrl(Math.min(pageCount, currentPage + 1))}
+        onClick={() => onStartUpdate?.()}
         className={`flex h-10 w-10 items-center justify-center border border-black/10 bg-white text-black transition-all hover:border-black ${
           currentPage === pageCount ? 'pointer-events-none opacity-30' : ''
         }`}

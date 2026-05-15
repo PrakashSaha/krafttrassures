@@ -166,7 +166,7 @@ export default function CheckoutPage() {
                     key={item.id} 
                     className="grid grid-cols-[100px_minmax(0,1fr)_32px] gap-4 border-b border-[#C8C3BB] pb-8 sm:grid-cols-[118px_minmax(0,1fr)_40px] sm:gap-6 last:border-0 last:pb-0"
                   >
-                    <Link className="relative aspect-[4/5] overflow-hidden bg-zinc-100" href={`/product/${item.slug}`}>
+                    <Link className="relative aspect-[4/5] overflow-hidden bg-zinc-100" href={`/product/${item.productId}`}>
                       <Image 
                         alt={item.name} 
                         src={item.image || '/placeholder.jpg'}
@@ -180,7 +180,7 @@ export default function CheckoutPage() {
                       <p className="mb-1 text-[10px] font-sans uppercase tracking-[0.3em] text-[#8C6E3F]">{item.category}</p>
                       <Link 
                         className="text-lg font-serif leading-tight text-black transition-colors hover:text-[#D33740] md:text-[22px]" 
-                        href={`/product/${item.slug}`}
+                        href={`/product/${item.productId}`}
                       >
                         {item.name}
                       </Link>

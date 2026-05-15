@@ -49,17 +49,20 @@ export default function ProductDetailView({
 
   const handleAddToCart = () => {
     setIsAdding(true);
-    addToCart({
-      id: product.id,
-      slug: product.slug,
-      name: product.name,
-      category: product.category,
-      price: numericPrice,
-      image: product.image,
-      href: product.href,
-    }, quantity);
     
-    setTimeout(() => setIsAdding(false), 2000);
+    // Smooth delay for 'premium' feel
+    setTimeout(() => {
+      addToCart({
+        id: product.id,
+        productId: product.productId,
+        name: product.name,
+        category: product.category,
+        price: numericPrice,
+        image: product.image,
+        href: product.href,
+      }, quantity);
+      setIsAdding(false);
+    }, 800);
   };
 
   return (
@@ -139,6 +142,7 @@ export default function ProductDetailView({
 
             <div className="mb-12 grid grid-cols-2 gap-8 border-y border-[#C8C3BB] py-10">
               <MetaItem label="Material" value={product.material || 'Traditional'} />
+              <MetaItem label="Size / Dimensions" value={product.size || 'Standard'} />
               <MetaItem label="Heritage Origin" value={product.origin || 'Arunachal Pradesh'} />
             </div>
 
@@ -194,10 +198,10 @@ export default function ProductDetailView({
                 {activeTab === 'description' ? (
                   <div className="space-y-4">
                     <p className="font-serif text-xl italic text-[#8C6E3F] mb-6 border-b border-[#C5AB7D]/20 pb-4">
-                      {product.description}
+                      {product.description || "No summary available."}
                     </p>
                     <div className="prose prose-sm max-w-none text-[#4A4540]">
-                      {product.fullDescription || "Detailed technical and artistic specifications for this archive piece are maintained by the Kraft Treasure curation team."}
+                      {product.fullDescription || "No detailed description provided."}
                     </div>
                   </div>
                 ) : (

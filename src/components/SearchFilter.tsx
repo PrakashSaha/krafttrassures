@@ -3,25 +3,29 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function SearchFilter() {
+export default function SearchFilter({ onStartUpdate }: { onStartUpdate?: () => void }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams.get('q') || '');
 
   useEffect(() => {
+    // Only trigger if query is different from searchParams 'q'
+    if (query === (searchParams.get('q') || '')) return;
+
     const delayDebounceFn = setTimeout(() => {
+      onStartUpdate?.();
       const params = new URLSearchParams(searchParams.toString());
       if (query) {
         params.set('q', query);
       } else {
         params.delete('q');
       }
-      params.delete('page'); // Reset to page 1
+      params.delete('page'); // Reset to page 1 when SEARCHING
       router.replace(`/shop?${params.toString()}`, { scroll: false });
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [query]);
+  }, [query, searchParams, router]);
 
   return (
     <div className="relative group">
