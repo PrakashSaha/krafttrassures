@@ -1,12 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-
+import { useRouter } from 'next/navigation';
 import { CartItem } from '@/lib/types';
-
 import { useCart } from '@/context/CartContext';
+import StockValidationModal from './modals/StockValidationModal';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -14,8 +14,34 @@ interface CartDrawerProps {
 }
 
 export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
-  const { cart, updateQty, removeFromCart, cartTotal } = useCart();
+  const router = useRouter();
+  const { cart, updateQty, removeFromCart, cartTotal, validateCartStock } = useCart();
+  const [isValidating, setIsValidating] = useState(false);
+  const [stockIssues, setStockIssues] = useState<any[]>([]);
+  const [showModal, setShowModal] = useState(false);
+
   const isEmpty = cart.length === 0;
+
+  const handleCheckoutClick = async () => {
+    setIsValidating(true);
+    try {
+      const result = await validateCartStock();
+      if (result.hasIssue) {
+        setStockIssues(result.issues);
+        setShowModal(true);
+      } else {
+        onClose();
+        router.push('/checkout');
+      }
+    } catch (err) {
+      console.error('Validation error', err);
+      // Fallback to push anyway if error
+      onClose();
+      router.push('/checkout');
+    } finally {
+      setIsValidating(false);
+    }
+  };
 
   return (
     <>
@@ -129,12 +155,28 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               <span className="text-[18px] ml-1">{cartTotal.toLocaleString('en-IN')}</span>
             </span>
           </div>
-          <Link href="/checkout" onClick={onClose} className="btn-dark block text-center mb-3">Checkout</Link>
+          <button 
+            onClick={handleCheckoutClick}
+            disabled={isValidating || isEmpty}
+            className={`btn-dark block w-full text-center mb-3 disabled:opacity-50 transition-all ${isValidating ? 'bg-[#D33740]' : ''}`}
+          >
+            {isValidating ? 'Checking Inventory...' : 'Checkout'}
+          </button>
           <button onClick={onClose} className="w-full py-2 text-[10px] font-semibold tracking-[0.3em] text-[#3A3530] uppercase hover:text-black transition-colors"> {/* // CONTRAST FIX */}
             Continue Shopping
           </button>
         </div>
       </div>
+
+      <StockValidationModal 
+        isOpen={showModal} 
+        onClose={() => setShowModal(false)} 
+        issues={stockIssues} 
+        onProceed={() => {
+          onClose();
+          router.push('/checkout');
+        }}
+      />
     </>
   );
 }

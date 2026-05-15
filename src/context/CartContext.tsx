@@ -20,6 +20,7 @@ interface CartContextType {
   updateQty: (productId: string | number, qty: number) => void;
   clearCart: () => void;
   checkout: (shippingAddress: any) => Promise<any>;
+  validateCartStock: () => Promise<{ hasIssue: boolean; issues: any[] }>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -283,6 +284,50 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 
 
+  const validateCartStock = useCallback(async () => {
+    if (cart.length === 0) return { hasIssue: false, issues: [] };
+
+    try {
+      const productIds = cart.map(item => item.documentId || item.id).filter(Boolean);
+      
+      const res = await fetchAPI('/products', {
+        params: {
+          'filters[documentId][$in]': productIds,
+          'fields': ['name', 'quantity']
+        }
+      });
+
+      const latestProducts = res.data || [];
+      const issues = [];
+
+      for (const cartItem of cart) {
+        const liveProduct = latestProducts.find((p: any) => 
+          (p.documentId && p.documentId === cartItem.documentId) || (p.id && p.id === cartItem.id)
+        );
+        
+        // Strapi v5 often flattens attributes
+        const stock = liveProduct?.quantity ?? liveProduct?.attributes?.quantity ?? 0;
+
+        if (cartItem.qty > stock) {
+          issues.push({
+            id: cartItem.id,
+            name: cartItem.name,
+            requested: cartItem.qty,
+            available: stock
+          });
+        }
+      }
+
+      return {
+        hasIssue: issues.length > 0,
+        issues
+      };
+    } catch (err) {
+      console.error('[STOCK-CHECK] Validation failed:', err);
+      return { hasIssue: false, issues: [] };
+    }
+  }, [cart]);
+
   const value = useMemo(() => ({
     cart,
     cartCount,
@@ -291,8 +336,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     removeFromCart,
     updateQty,
     clearCart,
-    checkout
-  }), [cart, cartCount, cartTotal, addToCart, removeFromCart, updateQty, clearCart, checkout]);
+    checkout,
+    validateCartStock
+  }), [cart, cartCount, cartTotal, addToCart, removeFromCart, updateQty, clearCart, checkout, validateCartStock]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };
