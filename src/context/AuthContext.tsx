@@ -26,6 +26,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [wishlist, setWishlist] = useState<WishlistProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Persistence management - LOAD from local storage immediately to prevent logout flash
+  // Consolidating startup logic into a single resilient effect below (line 103)
+
   const fetchUserWishlist = useCallback(async (token: string, userDocId: string) => {
     try {
       const data = await fetchAPI('/wishlists', {
@@ -88,33 +91,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Persistence management via /api/auth/me
   useEffect(() => {
-    const initAuth = async () => {
+    const startup = async () => {
+      const storedUser = localStorage.getItem('kt_user');
+      if (!storedUser) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        const res = await fetch('/api/auth/me');
-        const data = await res.json();
-        
-        if (data.user) {
-          const rawUser = data.user.data?.attributes || data.user.attributes || data.user.data || data.user;
-          const userWithJwt = {
-            ...rawUser,
-            // Map common variants to our interface
-            firstName: rawUser.firstName || rawUser.first_name || rawUser.firstname,
-            lastName: rawUser.lastName || rawUser.last_name || rawUser.lastname,
-            jwt: data.jwt || rawUser.jwt
-          };
-          setUser(userWithJwt);
-          if (data.jwt && (data.user.documentId || data.user.id)) {
-            await fetchUserWishlist(data.jwt, data.user.documentId || data.user.id);
+        const localUser = JSON.parse(storedUser);
+        setUser(localUser);
+
+        if (localUser.jwt) {
+          try {
+            const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL;
+            const res = await fetch(`${STRAPI_URL}/api/users/me?populate=*`, {
+              headers: { 'Authorization': `Bearer ${localUser.jwt}` },
+            });
+
+            if (res.ok) {
+              const freshData = await res.json();
+              const updatedUser = { ...localUser, ...freshData };
+              setUser(updatedUser);
+              localStorage.setItem('kt_user', JSON.stringify(updatedUser));
+              
+              if (updatedUser.jwt && (updatedUser.documentId || updatedUser.id)) {
+                await fetchUserWishlist(updatedUser.jwt, updatedUser.documentId || updatedUser.id);
+              }
+            } else if (res.status === 401) {
+              setUser(null);
+              localStorage.removeItem('kt_user');
+            }
+          } catch (fetchErr) {
+            // Keep local state on network error
           }
         }
-      } catch (error) {
-        console.error('Failed to initialize auth:', error);
+      } catch (e) {
+        localStorage.removeItem('kt_user');
       } finally {
         setLoading(false);
       }
     };
 
-    initAuth();
+    startup();
   }, [fetchUserWishlist]);
 
   const login = useCallback(async (userData: User) => {
@@ -135,6 +154,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       
       setUser(normalizedUser);
+      localStorage.setItem('kt_user', JSON.stringify(normalizedUser));
       
       if (userData.jwt && (userData.documentId || userData.id)) {
         await fetchUserWishlist(userData.jwt, (userData.documentId || userData.id).toString());
@@ -153,6 +173,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await fetch('/api/auth/clear-token', { method: 'POST' });
       setUser(null);
       setWishlist([]);
+      localStorage.removeItem('kt_user');
       toast.info('Signed out successfully');
     } catch (error) {
       console.error('Logout error:', error);

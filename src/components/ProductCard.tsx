@@ -18,9 +18,9 @@ export const ProductCard = memo(({ product, isVisible = true }: ProductCardProps
   const { user, toggleWishlist, isInWishlist } = useAuth();
   const router = useRouter();
 
-  const formattedPrice = typeof product.price === 'number' 
-    ? `₹${product.price.toLocaleString('en-IN')}` 
-    : product.price;
+  const priceValue = typeof product.price === 'number' 
+    ? product.price.toLocaleString('en-IN') 
+    : String(product.price).replace('₹', '');
 
   const handleWishlist = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -100,7 +100,10 @@ export const ProductCard = memo(({ product, isVisible = true }: ProductCardProps
       <div className="text-center space-y-1">
         <p className="text-[9px] font-semibold tracking-[0.3em] text-[#8C6E3F] uppercase">{product.category}</p>
         <h3 className="font-serif text-[15px] text-black group-hover:text-[#D33740] transition-colors line-clamp-1">{product.name}</h3>
-        <p className="font-serif text-[16px] font-medium text-black">{formattedPrice}</p>
+        <p className="font-serif text-[#B8860B] tracking-tight">
+          <span className="text-[18px] font-bold">₹</span>
+          <span className="text-[20px] font-bold ml-1">{priceValue}</span>
+        </p>
       </div>
 
     </Link>

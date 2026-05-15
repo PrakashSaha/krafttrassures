@@ -87,8 +87,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
               return combined;
             });
           }
-        } catch (err) {
+        } catch (err: any) {
           console.error('Failed to fetch cart from Strapi', err);
+          // If 401, the token is likely invalid - don't logout, just clear cart sync
+          if (err.status === 401) {
+            console.warn('Cart sync failed: Invalid token. Items will remain local-only.');
+          }
         }
       };
       fetchCart();

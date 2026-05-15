@@ -19,6 +19,7 @@ interface ProductListingProps {
   initialMax?: string;
   gridCols: string;
   searchQuery: string;
+  totalFound: number;
 }
 
 export default function ProductListing({
@@ -29,7 +30,8 @@ export default function ProductListing({
   initialMin = '',
   initialMax = '',
   gridCols,
-  searchQuery
+  searchQuery,
+  totalFound
 }: ProductListingProps) {
   const [minPrice, setMinPrice] = useState(initialMin);
   const [maxPrice, setMaxPrice] = useState(initialMax);
@@ -42,15 +44,7 @@ export default function ProductListing({
     setCols(gridCols);
   }, [initialMin, initialMax, gridCols]);
 
-  // Instant filtering on the client for price
-  const filteredProducts = useMemo(() => {
-    return initialProducts.filter((p: Product) => {
-      const price = typeof p.price === 'string' ? parseFloat((p.price as string).replace(/[₹,]/g, '')) : (p.price as number) || 0;
-      const min = minPrice ? parseInt(minPrice) : -Infinity;
-      const max = maxPrice ? parseInt(maxPrice) : Infinity;
-      return price >= min && price <= max;
-    });
-  }, [initialProducts, minPrice, maxPrice]);
+  const products = initialProducts;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)] gap-8 lg:gap-10 items-start">
@@ -110,7 +104,7 @@ export default function ProductListing({
         {/* Toolbar */}
         <section className="border-y border-[#C8C3BB] py-5 flex flex-col gap-4 lg:flex-row lg:items-center"> {/* // CONTRAST FIX */}
           <div className="flex items-center gap-8 lg:border-r lg:border-[#C8C3BB] lg:pr-8"> {/* // CONTRAST FIX */}
-            <h2 className="text-xl font-serif text-black whitespace-nowrap">{filteredProducts.length} Pieces Found</h2>
+            <h2 className="text-xl font-serif text-black whitespace-nowrap">{totalFound} Pieces Found</h2>
           </div>
           
           <div className="flex-1 min-w-0 px-0 lg:px-8">
@@ -125,8 +119,8 @@ export default function ProductListing({
 
         {/* Product Grid */}
         <div className={`grid grid-cols-2 gap-6 lg:gap-8 ${cols === '3' ? 'lg:grid-cols-3' : 'lg:grid-cols-3 xl:grid-cols-4'}`}>
-          {filteredProducts.length > 0 ? (
-            filteredProducts.map((p) => (
+          {products.length > 0 ? (
+            products.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))
           ) : (

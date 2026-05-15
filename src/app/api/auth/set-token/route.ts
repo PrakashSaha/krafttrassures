@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     cookieStore.set('kt_auth_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax', // CHANGED FROM STRICT FOR BETTER PERSISTENCE
       path: '/',
       maxAge: 60 * 60 * 24 * 7, // 7 days
     });

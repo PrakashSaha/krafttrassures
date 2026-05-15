@@ -47,7 +47,7 @@ export default function PriceFilter({
     }
   }, [minVal, maxVal, onPriceChange]);
 
-  // Debounced URL update for persistence
+  // Debounced URL update for persistence - REDUCED delay to prevent click lag
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       const params = new URLSearchParams(searchParams.toString());
@@ -58,10 +58,12 @@ export default function PriceFilter({
       if (min !== "" && minVal !== absoluteMin) params.set('min', minVal.toString()); else params.delete('min');
       if (max !== "" && maxVal !== absoluteMax) params.set('max', maxVal.toString()); else params.delete('max');
 
+      // Reset to page 1 when filtering to avoid "Empty Page" confusion
       if (params.get('min') !== currentMin || params.get('max') !== currentMax) {
+        params.delete('page');
         router.push(`/shop?${params.toString()}`, { scroll: false });
       }
-    }, 1500); // Increased debounce for URL to reduce lag
+    }, 400); // Drastically reduced from 1500ms to 400ms for responsiveness
 
     return () => clearTimeout(delayDebounceFn);
   }, [min, max, minVal, maxVal, absoluteMin, absoluteMax, router, searchParams]);
@@ -120,7 +122,7 @@ export default function PriceFilter({
                 type="number" 
                 min={0}
                 max={maxValRaw}
-                placeholder={absoluteMin.toLocaleString()}
+                placeholder={absoluteMin.toLocaleString('en-IN')}
                 value={min}
                 onChange={(e) => setMin(e.target.value)}
                 onBlur={handleMinInputBlur}
@@ -136,7 +138,7 @@ export default function PriceFilter({
                 type="number" 
                 min={minValRaw}
                 max={absoluteMax}
-                placeholder={absoluteMax.toLocaleString()} 
+                placeholder={absoluteMax.toLocaleString('en-IN')} 
                 value={max}
                 onChange={(e) => setMax(e.target.value)}
                 onBlur={handleMaxInputBlur}
@@ -202,8 +204,8 @@ export default function PriceFilter({
           </div>
 
           <div className="flex justify-between items-center mt-2 text-[10px] text-[#595148] font-sans uppercase tracking-[0.2em] font-medium"> {/* // CONTRAST FIX */}
-            <span>₹{minVal.toLocaleString()}</span>
-            <span>₹{maxVal.toLocaleString()}</span>
+            <span>₹{minVal.toLocaleString('en-IN')}</span>
+            <span>₹{maxVal.toLocaleString('en-IN')}</span>
           </div>
         </div>
       </div>

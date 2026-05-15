@@ -1,8 +1,29 @@
-import React from 'react';
 import { getProductBySlug } from '@/lib/strapi';
 import ProductDetailView from '@/components/ProductDetailView';
 import Link from 'next/link';
 import Topbar from '@/components/sections/Topbar';
+import { Metadata } from 'next';
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await getProductBySlug(slug);
+
+  if (!product) {
+    return {
+      title: 'Product Not Found | Kraft Treasure',
+    };
+  }
+
+  return {
+    title: `${product.name} | Kraft Treasure`,
+    description: product.description?.substring(0, 160) || `Explore the authentic ${product.name} handcrafted in Arunachal Pradesh.`,
+    openGraph: {
+      title: product.name,
+      description: product.description?.substring(0, 160),
+      images: product.image ? [{ url: product.image }] : [],
+    },
+  };
+}
 
 export default async function ProductDetailsPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -22,10 +43,18 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
     );
   }
 
+  // Fetch related products from the same category
+  const { getProducts } = await import('@/lib/strapi');
+  const relatedProducts = await getProducts({
+    'filters[categories][label][$eq]': product.category,
+    'filters[slug][$ne]': product.slug, // Don't show current product
+    'pagination[pageSize]': 4
+  });
+
   return (
     <>
       <Topbar />
-      <ProductDetailView product={product} />
+      <ProductDetailView product={product} relatedProducts={relatedProducts} />
     </>
   );
 }

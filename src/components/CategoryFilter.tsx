@@ -21,7 +21,8 @@ export default function CategoryFilter({ categories }: { categories: Category[] 
     } else {
       params.delete('category');
     }
-    router.push(`/shop?${params.toString()}`);
+    params.delete('page'); // Reset to page 1
+    router.replace(`/shop?${params.toString()}`, { scroll: false });
   };
 
   return (

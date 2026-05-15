@@ -81,7 +81,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     <div>
                       <p className="mb-0.5 text-[9px] font-semibold tracking-[0.2em] text-[#8C6E3F] uppercase">{item.category}</p> {/* // CONTRAST FIX */}
                       <h3 className="mb-1 line-clamp-1 font-serif text-[14px] text-black uppercase tracking-tight">{item.name}</h3>
-                      <p className="text-[12px] font-medium text-black">₹{item.price.toLocaleString('en-IN')}</p>
+                      <p className="text-[12px] font-bold text-[#B8860B]">₹ {<span className="text-[18px] font-bold text-[#B8860B]">{item.price.toLocaleString('en-IN')}</span>}</p>
                     </div>
                     
                     <div className="flex items-center justify-between">
@@ -124,7 +124,10 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
         <div className="border-t border-[#C8C3BB] bg-[#FAF7F2] px-6 py-5"> {/* // CONTRAST FIX */}
           <div className="mb-5 flex items-center justify-between">
             <span className="text-[10px] font-semibold tracking-[0.25em] text-black uppercase">Subtotal</span>
-            <span className="font-serif text-[16px] font-medium text-black">₹{cartTotal.toLocaleString('en-IN')}</span>
+            <span className="font-serif font-bold text-[#B8860B]">
+              <span className="text-[16px]">₹</span>
+              <span className="text-[18px] ml-1">{cartTotal.toLocaleString('en-IN')}</span>
+            </span>
           </div>
           <Link href="/checkout" onClick={onClose} className="btn-dark block text-center mb-3">Checkout</Link>
           <button onClick={onClose} className="w-full py-2 text-[10px] font-semibold tracking-[0.3em] text-[#3A3530] uppercase hover:text-black transition-colors"> {/* // CONTRAST FIX */}

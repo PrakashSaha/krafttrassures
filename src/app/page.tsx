@@ -35,7 +35,7 @@ export default async function Home() {
     getTestimonials(),
     getStorySteps(),
     getInstagramFeeds(),
-    getProducts({ 'pagination[pageSize]': 10, 'filters[categories][label][$containsi]': 'Show Pieces' }) // Example filter for treasures
+    getProducts({ 'pagination[pageSize]': 10, 'sort[0]': 'price:desc' }) // Showing premium/heritage pieces by price
   ]);
 
   return (

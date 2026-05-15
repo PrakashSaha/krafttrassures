@@ -23,6 +23,7 @@ export default function Header({ initialCategories = [] }: { initialCategories?:
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [isExtended, setIsExtended] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
   // Sync categories if initialCategories changes (though unlikely for a layout prop)
@@ -86,26 +87,55 @@ export default function Header({ initialCategories = [] }: { initialCategories?:
                   </Link>
                   <div className="invisible absolute top-full right-0 left-0 w-full origin-top scale-y-95 bg-white opacity-0 shadow-xl transition-all duration-300 group-hover:visible group-hover:scale-y-100 group-hover:opacity-100">
                     <div className="mx-auto max-w-[1440px] px-12 py-12">
-                      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                        {categories.map((item) => (
-                          <Link key={item.slug} href={`/shop?category=${item.slug}`} className="group/item flex flex-col">
-                            <div className="relative mb-4 aspect-[3/4] overflow-hidden rounded-sm bg-zinc-100">
-                              <Image 
-                                src={item.image || '/images/placeholder.png'} 
-                                alt={item.label} 
-                                fill
-                                className="object-cover transition-transform duration-700 group-hover/item:scale-110" 
-                                sizes="(max-width: 1024px) 50vw, 15vw"
-                              />
-                              <div className="absolute inset-0 bg-black/10 group-hover/item:bg-black/0 transition-colors" />
-                            </div>
-                            <h4 className="mb-2 text-[11px] font-semibold tracking-[0.2em] text-black uppercase">{item.label}</h4>
-                            <div className="flex items-center gap-2 text-[9px] font-medium tracking-[0.15em] text-[#3A3530] uppercase group-hover/item:text-[#D33740]"> {/* // CONTRAST FIX */}
-                              Explore
-                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover/item:translate-x-1"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                            </div>
-                          </Link>
-                        ))}
+                      <div className="mx-auto max-w-6xl">
+                        <div className={`grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-10 gap-y-12 transition-all duration-700 ${!isExtended ? 'max-h-[200px] overflow-hidden' : 'max-h-[1000px]'}`}>
+                          {(isExtended ? categories : categories.slice(0, 5)).map((item) => (
+                            <Link key={item.slug} href={`/shop?category=${item.slug}`} className="group/item flex flex-col items-center">
+                              <div className="relative mb-3 aspect-square w-full overflow-hidden rounded-full border border-[#C8C3BB] bg-zinc-50 shadow-sm transition-all duration-500 group-hover/item:border-[#8C6E3F] group-hover/item:shadow-md">
+                                <Image 
+                                  src={item.image || '/images/placeholder.png'} 
+                                  alt={item.label} 
+                                  fill
+                                  className="object-cover transition-transform duration-700 group-hover/item:scale-110" 
+                                  sizes="128px"
+                                />
+                              </div>
+                              <h4 className="text-[10px] font-bold tracking-[0.2em] text-black uppercase text-center">{item.label}</h4>
+                            </Link>
+                          ))}
+                          
+                          {/* Extend / More Button */}
+                          {!isExtended && categories.length > 5 && (
+                            <button 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setIsExtended(true);
+                              }}
+                              className="group/item flex flex-col items-center"
+                            >
+                              <div className="relative mb-3 flex aspect-square w-full items-center justify-center rounded-full border-2 border-dashed border-[#C8C3BB] bg-white transition-all duration-500 hover:border-[#8C6E3F] hover:bg-[#FAF7F2]">
+                                <div className="flex flex-col items-center gap-1 text-[#8C6E3F]">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                  <span className="text-[9px] font-bold tracking-widest uppercase">More</span>
+                                </div>
+                              </div>
+                              <h4 className="text-[10px] font-bold tracking-[0.2em] text-[#8C6E3F] uppercase">All Categories</h4>
+                            </button>
+                          )}
+                          
+                          {isExtended && (
+                            <button 
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setIsExtended(false);
+                              }}
+                              className="col-span-full mx-auto mt-8 flex items-center gap-2 text-[10px] font-bold tracking-[0.3em] text-[#8C6E3F] uppercase hover:text-black transition-colors"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                              Show Less
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>

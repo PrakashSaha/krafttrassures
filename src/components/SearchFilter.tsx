@@ -16,7 +16,8 @@ export default function SearchFilter() {
       } else {
         params.delete('q');
       }
-      router.push(`/shop?${params.toString()}`);
+      params.delete('page'); // Reset to page 1
+      router.replace(`/shop?${params.toString()}`, { scroll: false });
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);

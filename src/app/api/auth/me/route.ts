@@ -12,19 +12,21 @@ export async function GET() {
     const token = cookieStore.get('kt_auth_token')?.value;
 
     if (!token) {
-      return NextResponse.json({ user: null }, { status: 200 });
+      return NextResponse.json({ user: null, reason: 'No token cookie found' }, { status: 200 });
     }
 
     const res = await fetch(`${STRAPI_URL}/api/users/me?populate=*`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
+      cache: 'no-store',
     });
 
     if (!res.ok) {
-      // Token might be expired or invalid
-      cookieStore.delete('kt_auth_token');
-      return NextResponse.json({ user: null }, { status: 200 });
+      if (res.status === 401 || res.status === 403) {
+        cookieStore.delete('kt_auth_token');
+      }
+      return NextResponse.json({ user: null, reason: 'Invalid or expired token' }, { status: 200 });
     }
 
     const rawUser = await res.json();

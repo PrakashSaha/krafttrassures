@@ -101,8 +101,10 @@ export default function Hero({ slides }: { slides?: HeroSlide[] }) {
                       alt={product.name}
                       fill
                       priority={index === 0}
+                      loading={index === 0 ? "eager" : "lazy"}
                       className="object-cover transition-transform duration-[2000ms] ease-out group-hover:scale-105"
                       sizes="(max-width: 768px) 100vw, 50vw"
+                      style={{ objectFit: 'cover' }}
                     />
                   ) : (
                     <div className="absolute inset-0 bg-[#FAF7F2] flex items-center justify-center">

@@ -1,10 +1,29 @@
 import React from 'react';
 import Topbar from '@/components/sections/Topbar';
-import ProductCard from '@/components/ProductCard';
-import { getProducts, getCategories } from '@/lib/strapi';
+import { getProducts, getCategories, getProductsWithMeta } from '@/lib/strapi';
 import Link from 'next/link';
 import ProductListing from '@/components/ProductListing';
+import Pagination from '@/components/Pagination';
 import { Product } from '@/lib/types';
+import { Metadata } from 'next';
+
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ category?: string }> }): Promise<Metadata> {
+  const resolvedParams = await searchParams;
+  const category = resolvedParams?.category;
+
+  if (category) {
+    const formattedCategory = category.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    return {
+      title: `${formattedCategory} | Kraft Treasure Shop`,
+      description: `Discover our curated collection of handcrafted ${formattedCategory} from Arunachal Pradesh.`,
+    };
+  }
+
+  return {
+    title: 'Shop | Kraft Treasure Artisan Archive',
+    description: 'Browse our full archive of authentic tribal handicrafts, pottery, and sacred deity masks.',
+  };
+}
 
 export default async function ShopPage({
   searchParams,
@@ -16,6 +35,7 @@ export default async function ShopPage({
     min?: string;
     max?: string;
     cols?: string;
+    page?: string;
   }>;
 }) {
   const resolvedParams = await searchParams;
@@ -25,31 +45,30 @@ export default async function ShopPage({
   const minPrice = resolvedParams?.min || '';
   const maxPrice = resolvedParams?.max || '';
   const gridCols = resolvedParams?.cols || '4';
+  const currentPage = parseInt(resolvedParams?.page || '1');
+  const pageSize = 12;
 
-  // Fetch data from Strapi (omitting price filters to calculate absolute range)
-  const [allMatchingProducts, categories] = await Promise.all([
-    getProducts({
-      'filters[categories][slug][$eq]': currentCategory || undefined,
-      'filters[name][$containsi]': searchQuery || undefined,
-      'sort[0]': currentSort === 'price_asc' ? 'price:asc' : currentSort === 'price_desc' ? 'price:desc' : 'createdAt:desc',
-      'pagination[pageSize]': 100,
-    }),
-    getCategories(),
-  ]);
-
-  // Calculate absolute min/max from all matching products for placeholders
-  const prices: (number | string)[] = allMatchingProducts.map((p: Product) => p.price).filter((p: any) => p != null);
-  const numericPrices: number[] = prices.map(p => typeof p === 'string' ? parseFloat(p.replace(/[₹,]/g, '')) : Number(p));
-  const absoluteMin = numericPrices.length > 0 ? Math.min(...numericPrices) : 0;
-  const absoluteMax = numericPrices.length > 0 ? Math.max(...numericPrices) : 0;
-
-  // Filter products for display based on user-selected price range
-  const products = allMatchingProducts.filter((p: Product) => {
-    const price = typeof p.price === 'string' ? parseFloat((p.price as string).replace(/[₹,]/g, '')) : (p.price as number) || 0;
-    const min = minPrice ? parseInt(minPrice) : -Infinity;
-    const max = maxPrice ? parseInt(maxPrice) : Infinity;
-    return price >= min && price <= max;
+  // Fetch data from Strapi with full filters and pagination
+  const { products, meta } = await getProductsWithMeta({
+    'filters[categories][slug][$eq]': currentCategory || undefined,
+    'filters[name][$containsi]': searchQuery || undefined,
+    'filters[price][$gte]': minPrice || undefined,
+    'filters[price][$lte]': maxPrice || undefined,
+    'sort[0]': currentSort === 'price_asc' ? 'price:asc' : currentSort === 'price_desc' ? 'price:desc' : 'createdAt:desc',
+    'pagination[page]': currentPage,
+    'pagination[pageSize]': pageSize,
   });
+
+  const categories = await getCategories();
+
+  // We still fetch absolute min/max for the slider range (from a broader query)
+  // This could be optimized further with a specialized stats endpoint in Strapi
+  const absoluteMin = 0;
+  const absoluteMax = 500000; // Default max for the slider if not calculated
+
+  // Pagination info from Strapi Meta
+  const pageCount = meta?.pagination?.pageCount || 1;
+  const totalItems = meta?.pagination?.total || 0;
 
   return (
     <div className="min-h-screen bg-white">
@@ -68,7 +87,7 @@ export default async function ShopPage({
 
       <main className="mx-auto max-w-[1440px] px-6 pb-28 lg:px-12 lg:pb-20">
         <ProductListing 
-          initialProducts={allMatchingProducts}
+          initialProducts={products}
           categories={categories}
           absoluteMin={absoluteMin}
           absoluteMax={absoluteMax}
@@ -76,7 +95,10 @@ export default async function ShopPage({
           initialMax={maxPrice}
           gridCols={gridCols}
           searchQuery={searchQuery}
+          totalFound={totalItems}
         />
+        
+        <Pagination pageCount={pageCount} currentPage={currentPage} />
       </main>
     </div>
   );

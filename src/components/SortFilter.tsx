@@ -12,7 +12,8 @@ export default function SortFilter() {
     const value = e.target.value;
     const params = new URLSearchParams(searchParams.toString());
     params.set('sort', value);
-    router.push(`/shop?${params.toString()}`);
+    params.delete('page'); // Reset to page 1
+    router.replace(`/shop?${params.toString()}`, { scroll: false });
   };
 
   return (

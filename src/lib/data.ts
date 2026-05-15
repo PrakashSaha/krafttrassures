@@ -34,6 +34,29 @@ export const HERO_DATA: any[] = [];
 export const TREASURE_DATA: any[] = [];
 export const INSTAGRAM_POSTS: any[] = [];
 export const STORY_STEPS: any[] = [];
-export const ADORNMENTS_DATA: any[] = [];
+export const ADORNMENTS_DATA = [
+  {
+    title: "Handcrafted Silver Jewelry",
+    subtitle: "Traditional Elegance",
+    priceText: "Starting from ₹12,500",
+    image: "/images/img_a9132c04a3411b218b8addb9be42a9ba.png",
+    href: "/shop?category=jewelry",
+    large: true
+  },
+  {
+    title: "Tribal Beadwork",
+    subtitle: "Heritage Adornments",
+    priceText: "From ₹4,200",
+    image: "/images/img_2c787285a0939bbbc45bdf59b14ab08c.png",
+    href: "/shop?category=beadwork"
+  },
+  {
+    title: "Traditional Headgear",
+    subtitle: "Cultural Pride",
+    priceText: "From ₹8,900",
+    image: "/images/img_93892b41c09914ab339b71a95c773150.png",
+    href: "/shop?category=headgear"
+  }
+];
 export const TRENDING_DATA: any[] = [];
 export const COLLECTION_DATA: any[] = [];

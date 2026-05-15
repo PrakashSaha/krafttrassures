@@ -41,6 +41,7 @@ export async function fetchStrapi(
   query?: Record<string, any>,
   options: RequestInit = {}
 ) {
+  let url = '';
   try {
     let queryString = '';
     if (query) {
@@ -67,7 +68,7 @@ export async function fetchStrapi(
       if (parts.length > 0) queryString = '?' + parts.join('&');
     }
     
-    const url = `${STRAPI_URL}/api/${endpoint}${queryString}`;
+    url = `${STRAPI_URL}/api/${endpoint}${queryString}`;
     
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -85,25 +86,34 @@ export async function fetchStrapi(
     });
 
     if (!res.ok) {
-      let errorDetails = '';
-      try {
-        const errorData = await res.json();
-        errorDetails = errorData.error?.message || JSON.stringify(errorData.error || errorData);
-      } catch (e) {}
-
-      const errorMsg = `Strapi Error [${res.status}] ${url}${errorDetails ? `: ${errorDetails}` : ''}`;
-      if (res.status === 401 || res.status === 403) console.error(`🔒 ${errorMsg}`);
-      else if (res.status === 404) console.warn(`⚠️ ${errorMsg}`);
-      else console.error(`❌ ${errorMsg}`);
-      
+      const errorText = await res.text();
+      strapiErrorLogger(res.status, url, errorText);
       return null;
     }
 
     return await res.json();
   } catch (error) {
-    console.error('Strapi fetch error:', error);
+    console.error('❌ Strapi Connection Refused:', url || endpoint);
     return null;
   }
+}
+
+/**
+ * Logger for Strapi errors to avoid console clutter while maintaining visibility
+ */
+function strapiErrorLogger(status: number, url: string, errorText: string) {
+  let message = '';
+  try {
+    const parsed = JSON.parse(errorText);
+    message = parsed.error?.message || errorText;
+  } catch (e) {
+    message = errorText;
+  }
+
+  const msg = `Strapi [${status}] ${url}: ${message}`;
+  if (status === 401 || status === 403) console.error(`🔒 AUTH: ${msg}`);
+  else if (status === 404) console.warn(`⚠️ NOT FOUND: ${msg}`);
+  else console.error(`❌ ERROR: ${msg}`);
 }
 
 /**
@@ -129,15 +139,22 @@ export function getStrapiMedia(url: any) {
 }
 
 /**
- * Standardizes category label extraction
+ * Standardizes category label extraction with fallbacks
  */
 function extractCategoryLabel(categories: any): string {
   const catList = Array.isArray(categories) ? categories : (categories?.data || []);
   if (catList.length === 0) return 'Uncategorized';
   
   const first = catList[0];
-  return first.label || first.attributes?.label || 'Uncategorized';
+  const label = first.label || first.attributes?.label || 'Uncategorized';
+  return label;
 }
+
+const FALLBACK_CATEGORIES: Category[] = [
+  { label: 'Show Pieces', slug: 'show-pieces', href: '/shop?category=show-pieces', image: null },
+  { label: 'Home Decor', slug: 'home-decor', href: '/shop?category=home-decor', image: null },
+  { label: 'Accessories', slug: 'accessories', href: '/shop?category=accessories', image: null },
+];
 
 /**
  * Fetch Hero Sliders
@@ -203,6 +220,39 @@ export const getProducts = cache(async (params?: Record<string, any>): Promise<P
 });
 
 /**
+ * Fetch Products with Pagination Metadata
+ */
+export const getProductsWithMeta = cache(async (params?: Record<string, any>): Promise<{ products: Product[], meta: any }> => {
+  const response = await fetchStrapi('products', { 
+    populate: ['image', 'categories'],
+    'pagination[withCount]': true,
+    ...params 
+  }, {
+    next: { revalidate: 300 }
+  });
+  
+  if (!response?.data) return { products: [], meta: { pagination: { total: 0, pageCount: 0, page: 1, pageSize: 12 } } };
+
+  const products = response.data.map((item: any): Product => {
+    const data = flattenAttributes(item);
+    
+    return {
+      id: data.id,
+      documentId: data.documentId,
+      name: data.name,
+      slug: data.slug,
+      category: extractCategoryLabel(data.categories),
+      price: data.price,
+      image: getStrapiMedia(data.image),
+      hoverImage: Array.isArray(data.image) && data.image.length > 1 ? getStrapiMedia(data.image[1]) : null,
+      href: `/product/${data.slug}`,
+    };
+  });
+
+  return { products, meta: response.meta };
+});
+
+/**
  * Fetch Single Product by Slug
  */
 export const getProductBySlug = cache(async (slug: string): Promise<Product | null> => {
@@ -239,19 +289,23 @@ export const getProductBySlug = cache(async (slug: string): Promise<Product | nu
  * Fetch Categories
  */
 export const getCategories = cache(async (): Promise<Category[]> => {
-  const response = await fetchStrapi('categories', { populate: 'image' });
-  if (!response?.data) return [];
+  try {
+    const response = await fetchStrapi('categories', { populate: 'image' });
+    if (!response?.data) return FALLBACK_CATEGORIES;
 
-  return response.data.map((item: any) => {
-    const data = flattenAttributes(item);
-    return {
-      label: data.label,
-      slug: data.slug,
-      description: data.description,
-      image: getStrapiMedia(data.image),
-      href: `/shop?category=${data.slug}`,
-    };
-  });
+    return response.data.map((item: any) => {
+      const data = flattenAttributes(item);
+      return {
+        label: data.label,
+        slug: data.slug,
+        description: data.description,
+        image: getStrapiMedia(data.image),
+        href: `/shop?category=${data.slug}`,
+      };
+    });
+  } catch (e) {
+    return FALLBACK_CATEGORIES;
+  }
 });
 
 /**
