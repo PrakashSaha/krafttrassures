@@ -252,9 +252,13 @@ function MetaItem({ label, value }: { label: string; value: string }) {
   );
 }
 
-function QuantityBtn({ label, onClick }: { label: string; onClick: () => void }) {
+function QuantityBtn({ label, onClick, disabled }: { label: string; onClick: () => void; disabled?: boolean }) {
   return (
-    <button onClick={onClick} className="h-full px-6 text-xl text-[#595148] hover:text-black hover:bg-black/5 transition-all">
+    <button 
+      onClick={onClick} 
+      disabled={disabled}
+      className="h-full px-6 text-xl text-[#595148] hover:text-black hover:bg-black/5 transition-all disabled:opacity-20 disabled:cursor-not-allowed"
+    >
       {label}
     </button>
   );
