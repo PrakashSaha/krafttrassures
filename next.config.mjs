@@ -19,6 +19,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'ktcms-1.onrender.com',
         pathname: '/uploads/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'dlvanktuohroejmhytng.supabase.co',
+        pathname: '/storage/v1/object/public/**',
       }
     ],
   },
