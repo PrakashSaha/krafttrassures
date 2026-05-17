@@ -120,7 +120,14 @@ export async function fetchStrapi(
     return await res.json();
   } catch (error: any) {
     console.error('❌ Strapi Connection Refused:', url || endpoint, error.message);
-    // Throw error so Next.js error boundary catches it and shows the Server Down page
+    
+    // Prevent Next.js build from failing if the backend (e.g., Render free tier) is asleep during deployment
+    if (process.env.npm_lifecycle_event === 'build' || process.env.CI) {
+      console.warn('⚠️ Swallowing error during build phase to prevent deployment failure.');
+      return null;
+    }
+
+    // Throw error at runtime so Next.js error boundary catches it and shows the Server Down page
     throw new Error('fetch failed: Connection Refused to backend server');
   }
 }
