@@ -14,7 +14,7 @@ import TimelessTreasures from '@/components/sections/TimelessTreasures';
 import TrustedBy from '@/components/sections/TrustedBy';
 import Instagram from '@/components/sections/Instagram';
 import Features from '@/components/sections/Features';
-import { getHeroSliders, getProducts, getCategories, getTestimonials, getStorySteps, getInstagramFeeds } from '@/lib/strapi';
+import { getHeroSliders, getProducts, getCategories, getTestimonials, getStorySteps, getInstagramFeeds, getAdornments } from '@/lib/strapi';
 
 export default async function Home() {
   // Parallel fetching for all sections
@@ -26,7 +26,8 @@ export default async function Home() {
     testimonials, 
     storySteps, 
     instagramFeeds,
-    treasureProducts
+    treasureProducts,
+    adornmentItems
   ] = await Promise.all([
     getHeroSliders(),
     getProducts({ 'pagination[pageSize]': 5, 'sort[0]': 'updatedAt:desc' }),
@@ -35,7 +36,8 @@ export default async function Home() {
     getTestimonials(),
     getStorySteps(),
     getInstagramFeeds(),
-    getProducts({ 'pagination[pageSize]': 10, 'sort[0]': 'price:desc' }) // Showing premium/heritage pieces by price
+    getProducts({ 'pagination[pageSize]': 10, 'sort[0]': 'price:desc' }),
+    getAdornments()
   ]);
 
   return (
@@ -49,7 +51,7 @@ export default async function Home() {
         <Heritage />
         <Marquee />
         <NewArrivals products={newArrivals} />
-        <Adornments />
+        <Adornments items={adornmentItems} />
         <Testimonials reviews={testimonials} />
         <ArtisanStories steps={storySteps} />
         <TimelessTreasures products={treasureProducts} />

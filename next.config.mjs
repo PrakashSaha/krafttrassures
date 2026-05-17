@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'http',
@@ -17,16 +16,14 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'ktcms-1.onrender.com',
-        pathname: '/uploads/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'dlvanktuohroejmhytng.supabase.co',
+        hostname: 'dlvanktuohroejmhytng.storage.supabase.co',
         pathname: '/storage/v1/object/public/**',
-      }
+      },
     ],
   },
+  // Silence Turbopack workspace warning
+  // Note: turbo configuration is handled differently in newer Next.js versions
+
 };
 
 export default nextConfig;

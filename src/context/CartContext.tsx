@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from './AuthContext';
-import { fetchAPI } from '@/lib/api';
+import { fetchAPI, formatRelation } from '@/lib/api';
 import { Product } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -29,131 +29,181 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { user } = useAuth();
   const [cart, setCart] = useState<CartItem[]>([]);
 
-  // Persistence
+
+  // Sync with Strapi on login / user session change
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const storedCart = localStorage.getItem('kt_cart');
-    if (storedCart) {
-      try {
-        setCart(JSON.parse(storedCart));
-      } catch (e) {
-        console.error('Failed to parse cart:', e);
-      }
+    const handleLogout = () => setCart([]);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('auth-logout', handleLogout);
+      return () => window.removeEventListener('auth-logout', handleLogout);
     }
   }, []);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('kt_cart', JSON.stringify(cart));
+    if (!user?.jwt || !user?.documentId) {
+      return;
     }
-  }, [cart]);
 
-  // Sync with Strapi on login
-  useEffect(() => {
-    if (user?.jwt && user?.id) {
-      const fetchCart = async () => {
-        try {
-          const data = await fetchAPI(`/api/carts`, {
-            token: user.jwt,
-            params: {
-              'filters[user][documentId][$eq]': user.documentId || user.id,
-              'populate': 'product.image'
-            }
-          });
+    const syncCart = async () => {
+      try {
+        // 1. Fetch remote cart items from CMS
+        const res = await fetchAPI('/carts', {
+          token: user.jwt,
+          params: { 'populate': 'product.image' }
+        });
 
-          if (data?.data) {
-            const remoteCart: CartItem[] = data.data.map((item: any) => ({
-              id: item.product?.id,
-              productId: item.product?.productId || item.product?.documentId,
-              name: item.product?.name,
-              category: item.product?.category,
-              price: item.product?.price,
-              qty: item.quantity,
-              image: item.product?.image?.[0]?.url || '',
-              cartId: item.documentId
-            }));
+        if (!res?.data) return;
 
-            // Merge local and remote
-            setCart(prev => {
-              const combined = [...prev];
-              remoteCart.forEach(remoteItem => {
-                const idx = combined.findIndex(li => li.id === remoteItem.id);
-                if (idx === -1) {
-                  combined.push(remoteItem);
-                } else {
-                  combined[idx] = { ...combined[idx], cartId: remoteItem.cartId, qty: Math.max(combined[idx].qty, remoteItem.qty) };
+        // 2. Map remote cart items to CartItem format
+        const remoteCart: CartItem[] = res.data.map((item: any) => {
+          const product = item.product;
+          if (!product) return null;
+
+          let imgUrl = '';
+          if (product.image) {
+            const imageData = product.image.data || product.image;
+            const imgArray = Array.isArray(imageData) ? imageData : [imageData];
+            const firstImg = imgArray[0]?.attributes || imgArray[0];
+            const url = firstImg?.url;
+            const baseUrl = (process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337').replace(/\/$/, '');
+            imgUrl = url ? (url.startsWith('http') ? url : `${baseUrl}${url}`) : '';
+          }
+
+          return {
+            id: product.id,
+            productId: product.documentId || product.id,
+            name: product.name,
+            category: product.category,
+            price: product.price,
+            qty: item.quantity,
+            image: imgUrl,
+            cartId: item.documentId || item.id
+          };
+        }).filter(Boolean) as CartItem[];
+
+        // 3. Merge local and remote carts seamlessly
+        setCart(prevLocal => {
+          const merged = [...prevLocal];
+          const handledRemoteIds = new Set<string | number>();
+
+          const updatedLocal = merged.map(localItem => {
+            const remoteItem = remoteCart.find(r => r.id === localItem.id);
+            if (remoteItem) {
+              handledRemoteIds.add(remoteItem.id);
+              const maxQty = Math.max(localItem.qty, remoteItem.qty);
+              
+              // Sync the higher quantity to the backend in the background if local was higher
+              if (localItem.qty > remoteItem.qty && remoteItem.cartId) {
+                fetchAPI(`/api/carts/${remoteItem.cartId}`, {
+                  method: 'PUT',
+                  token: user.jwt,
+                  body: JSON.stringify({ data: { quantity: maxQty } })
+                }).catch(err => console.error('Failed to sync updated quantity to backend:', err));
+              }
+
+              return {
+                ...localItem,
+                cartId: remoteItem.cartId,
+                qty: maxQty
+              };
+            } else {
+              // Local-only item: Upload it to backend in background
+              // If it already has a cartId, it means it was deleted remotely.
+              if (localItem.cartId) {
+                return null;
+              }
+
+              const body = {
+                data: {
+                  product: formatRelation(localItem.productId || localItem.id),
+                  quantity: localItem.qty,
+                  added_at: new Date().toISOString()
                 }
-              });
-              return combined;
-            });
-          }
-        } catch (err: any) {
-          console.error('Failed to fetch cart from Strapi', err);
-          // If 401, the token is likely invalid - don't logout, just clear cart sync
-          if (err.status === 401) {
-            console.warn('Cart sync failed: Invalid token. Items will remain local-only.');
-          }
+              };
+              fetchAPI('/carts', {
+                method: 'POST',
+                token: user.jwt,
+                body: JSON.stringify(body)
+              }).then(postRes => {
+                if (postRes?.data?.documentId) {
+                  setCart(current => current.map(item => item.id === localItem.id ? { ...item, cartId: postRes.data.documentId } : item));
+                }
+              }).catch(err => console.error('Failed to upload local item to backend:', err));
+
+              return localItem;
+            }
+          }).filter(Boolean) as CartItem[];
+
+          const newRemoteItems = remoteCart.filter(r => !handledRemoteIds.has(r.id));
+          return [...updatedLocal, ...newRemoteItems];
+        });
+      } catch (err: any) {
+        if (err.status !== 401) {
+          console.error('Failed to sync cart with backend:', err);
         }
-      };
-      fetchCart();
-    }
+      }
+    };
+
+    syncCart();
   }, [user]);
 
+  // Add Item to Cart (Immediate local update, background server sync)
   const addToCart = useCallback(async (product: Omit<CartItem, 'qty'>, quantity: number = 1) => {
-    let newItem: CartItem | null = null;
-    
+    let finalQty = quantity;
+    let existingItem: CartItem | undefined;
+
     setCart((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
-      if (existing) {
+      existingItem = prev.find((item) => item.id === product.id);
+      if (existingItem) {
+        finalQty = existingItem.qty + quantity;
         return prev.map((item) =>
-          item.id === product.id ? { ...item, qty: item.qty + quantity } : item
+          item.id === product.id ? { ...item, qty: finalQty } : item
         );
       }
-      newItem = { ...product, qty: quantity };
-      return [...prev, newItem];
+      return [...prev, { ...product, qty: quantity }];
     });
 
-    // Sync to Strapi
-    if (user?.jwt && user?.id) {
+    toast.success('Added to collection', {
+      description: `${product.name} is now in your cart.`,
+    });
+
+    if (user?.jwt && user?.documentId) {
       try {
-        const existing = cart.find(item => item.id === product.id);
-        if (existing?.cartId) {
-          await fetchAPI(`/api/carts/${existing.cartId}`, {
+        const itemInCart = cart.find((item) => item.id === product.id);
+        if (itemInCart?.cartId) {
+          await fetchAPI(`/api/carts/${itemInCart.cartId}`, {
             method: 'PUT',
             token: user.jwt,
-            body: JSON.stringify({ data: { quantity: existing.qty + quantity } })
+            body: JSON.stringify({ data: { quantity: finalQty } })
           });
         } else {
           const body = {
             data: {
-              product: product.productId || product.id,
-              user: user.documentId || user.id,
+              product: formatRelation(product.productId || (product as any).documentId),
               quantity: quantity,
               added_at: new Date().toISOString()
             }
           };
-          const res = await fetchAPI('/api/carts', {
+          const res = await fetchAPI('/carts', {
             method: 'POST',
             token: user.jwt,
             body: JSON.stringify(body)
           });
           if (res?.data?.documentId) {
-             setCart(prev => prev.map(item => item.id === product.id ? { ...item, cartId: res.data.documentId } : item));
+            setCart(prev => prev.map(item => item.id === product.id ? { ...item, cartId: res.data.documentId } : item));
           }
         }
       } catch (err) {
-        console.error('Failed to sync cart add', err);
+        console.error('Failed to sync cart add to Strapi:', err);
       }
     }
-    
-    toast.success('Added to collection', {
-      description: `${product.name} is now in your cart.`,
-    });
   }, [user, cart]);
 
+  // Remove Item from Cart (Immediate local update, background server sync)
   const removeFromCart = useCallback(async (productId: string | number) => {
     const itemToRemove = cart.find(item => item.id === productId);
     setCart((prev) => prev.filter((item) => item.id !== productId));
+    toast.info('Item removed from cart');
 
     if (user?.jwt && itemToRemove?.cartId) {
       try {
@@ -162,16 +212,18 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           token: user.jwt
         });
       } catch (err) {
-        console.error('Failed to sync cart remove', err);
+        console.error('Failed to sync cart remove from Strapi:', err);
       }
     }
-    toast.info('Item removed from cart');
   }, [user, cart]);
 
+  // Update Item Quantity (Immediate local update, background server sync)
   const updateQty = useCallback(async (productId: string | number, qty: number) => {
+    const targetQty = Math.max(1, qty);
     const itemToUpdate = cart.find(item => item.id === productId);
+    
     setCart((prev) =>
-      prev.map((item) => (item.id === productId ? { ...item, qty: Math.max(1, qty) } : item))
+      prev.map((item) => (item.id === productId ? { ...item, qty: targetQty } : item))
     );
 
     if (user?.jwt && itemToUpdate?.cartId) {
@@ -179,10 +231,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await fetchAPI(`/api/carts/${itemToUpdate.cartId}`, {
           method: 'PUT',
           token: user.jwt,
-          body: JSON.stringify({ data: { quantity: Math.max(1, qty) } })
+          body: JSON.stringify({ data: { quantity: targetQty } })
         });
       } catch (err) {
-        console.error('Failed to sync cart update', err);
+        console.error('Failed to sync cart quantity update to Strapi:', err);
       }
     }
   }, [user, cart]);
@@ -191,11 +243,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const cartTotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.qty, 0), [cart]);
 
   const clearCart = useCallback(async () => {
-    const itemsToDelete = [...cart]; // Capture current items
-    
-    // Clear local state immediately for better UX
+    const itemsToDelete = [...cart];
     setCart([]);
-    if (typeof window !== 'undefined') localStorage.removeItem('kt_cart');
 
     if (user?.jwt && itemsToDelete.length > 0) {
       try {
@@ -209,62 +258,66 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           )
         );
       } catch (err) {
-        console.error('Failed to clear remote cart items', err);
+        console.error('Failed to clear remote cart items:', err);
       }
     }
     toast.info('Cart cleared');
   }, [user, cart]);
 
+  // Checkout E-commerce Flow (Creates Order -> Creates Order Items -> Clears Cart)
   const checkout = useCallback(async (shippingAddress: any) => {
     if (!user?.jwt || !user?.id || cart.length === 0) {
       throw new Error('Cannot checkout: user not logged in or cart empty');
     }
 
-    const userId = user.documentId || user.id;
-
     try {
-      // ✅ STEP 1: Create the Order (no product here)
+      // 1. Create the Order
+      const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
       const orderPayload = {
         data: {
+          orderId: `KT-${uniqueSuffix}`,
+          transactionId: `TXN-${uniqueSuffix}`,
           totalAmount: cartTotal,
-          paymentStatus: "Pending",
+          paymentStatus: 'Pending',
           shippingAddress: shippingAddress,
-          user: userId,
+          owner: formatRelation(user.documentId),
+          publishedAt: new Date().toISOString(),
         }
       };
 
-      const orderRes = await fetchAPI("/api/orders", {
-        method: "POST",
+      const orderRes = await fetchAPI('/api/orders', {
+        method: 'POST',
         token: user.jwt,
         body: JSON.stringify(orderPayload),
       });
 
+
       const orderId = orderRes.data.documentId || orderRes.data.id;
 
-      // ✅ STEP 2: Create Order Items — product goes HERE
+      // 2. Create Order Items linking to the Order and Product
       await Promise.all(
         cart.map((item) =>
-          fetchAPI("/api/order-items", {
-            method: "POST",
+          fetchAPI('/api/order-items', {
+            method: 'POST',
             token: user.jwt,
             body: JSON.stringify({
               data: {
                 quantity: item.qty,
-                unit_price: item.price,
-                total_price: item.price * item.qty,
-                product_name: item.name,
-                product: item.productId || item.id,
-                order: orderId,
-                user: userId,
-                added_at: new Date().toISOString(),
-                publishedAt: new Date().toISOString(), // Required for draftAndPublish
+                unitPrice: item.price,
+                totalPrice: item.price * item.qty,
+                productName: item.name,
+                product: formatRelation(item.productId),
+                order: formatRelation(orderId),
+                owner: formatRelation(user.documentId),
+                addedAt: new Date().toISOString(),
+                publishedAt: new Date().toISOString(), 
               }
             }),
           })
         )
       );
 
-      // ✅ STEP 3: Clear cart after success
+      // 3. Clear cart after successful order creation
       await clearCart();
       
       toast.success('Order placed successfully!', {
@@ -273,7 +326,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return orderRes.data;
     } catch (err: any) {
-      console.error('Checkout failed', err);
+      console.error('Checkout failed:', err);
       toast.error('Checkout failed', {
         description: err.message || 'Something went wrong. Please try again.',
       });
@@ -281,8 +334,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [user, cart, cartTotal, clearCart]);
 
-
-
+  // Validate Cart Stock
   const validateCartStock = useCallback(async () => {
     if (cart.length === 0) return { hasIssue: false, issues: [] };
 
@@ -291,7 +343,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const res = await fetchAPI('/products', {
         params: {
-          'filters[productId][$in]': productIds,
+          'filters[documentId][$in]': productIds,
           'fields': ['name', 'quantity']
         }
       });
@@ -301,10 +353,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       for (const cartItem of cart) {
         const liveProduct = latestProducts.find((p: any) => 
-          (p.productId && p.productId === cartItem.productId) || (p.id && p.id === cartItem.id)
+          String(p.documentId || p.id) === String(cartItem.productId || cartItem.id)
         );
         
-        // Strapi v5 often flattens attributes
         const stock = liveProduct?.quantity ?? liveProduct?.attributes?.quantity ?? 0;
 
         if (cartItem.qty > stock) {

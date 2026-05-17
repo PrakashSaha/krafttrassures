@@ -5,6 +5,7 @@ export interface Product {
   category: string;
   price: number;
   image: string | null;
+  thumbnail?: string | null;
   hoverImage?: string | null;
   href: string;
   material?: string;
@@ -55,7 +56,7 @@ export interface Address {
 
 export interface User {
   id: string | number;
-  documentId?: string;
+  documentId: string;
   username: string;
   email: string;
   firstName?: string;

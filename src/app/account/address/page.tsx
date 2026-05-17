@@ -2,10 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { fetchAPI } from '@/lib/api';
+import { fetchAPI, formatRelation } from '@/lib/api';
 import { Address } from '@/lib/types';
-
-
+import { toast } from 'sonner';
 
 
 export default function AddressPage() {
@@ -25,11 +24,13 @@ export default function AddressPage() {
   };
 
   const fetchAddresses = async () => {
-    if (!user?.jwt || !user?.id) return;
+    if (!user?.jwt || !user?.documentId) return;
     try {
       const data = await fetchAPI('/api/addresses', {
         token: user.jwt,
-        params: { 'filters[user][id][$eq]': user.id }
+        params: {
+          // Owner filter injected by middleware
+        }
       });
       if (data && data.data) {
         setAddresses(data.data.map((item: any) => ({
@@ -55,23 +56,41 @@ export default function AddressPage() {
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!user?.jwt || !user?.id) return;
+
+    // TEMPORARY DEBUG
+    console.log('[SAVE ADDRESS DEBUG]', {
+      userId: user?.id,
+      userDocumentId: user?.documentId,
+      jwt: user?.jwt ? '✓ present' : '✗ missing',
+    });
+
+    if (!user?.jwt || !user?.documentId) {
+      toast.error('Session error: please sign in again');
+      console.error('Missing jwt or documentId on user', user);
+      return;
+    }
     
-    const addressData = { ...form, user: user.id };
+    // Use documentId/owner pattern for Strapi v5
+    const addressData = { 
+      ...form, 
+      // Omit owner: injected by middleware
+    };
 
     try {
       const endpoint = editingId ? `/api/addresses/${editingId}` : '/api/addresses';
       const method = editingId ? 'PUT' : 'POST';
 
-      const data = await fetchAPI(endpoint, {
+      await fetchAPI(endpoint, {
         method,
         token: user.jwt,
         body: JSON.stringify({ data: addressData })
       });
 
+      toast.success(editingId ? 'Address updated' : 'Address saved');
       resetForm();
       fetchAddresses();
     } catch (err: any) {
+      toast.error('Failed to save address');
       console.error('Error saving address', err);
     }
   };

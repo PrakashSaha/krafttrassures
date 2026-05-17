@@ -48,6 +48,11 @@ export default function ProductDetailView({
   };
 
   const handleAddToCart = () => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
     setIsAdding(true);
     
     // Smooth delay for 'premium' feel
@@ -80,17 +85,23 @@ export default function ProductDetailView({
         <div className="flex flex-col gap-16 lg:flex-row lg:gap-24">
           {/* Left: Images */}
           <div className="lg:w-1/2">
-            <div className="relative mb-6 aspect-[4/5] overflow-hidden border border-[#C8C3BB] bg-white shadow-lg group">
+            <div className="relative mb-6 aspect-[4/5] overflow-hidden border border-[#C8C3BB] bg-white shadow-lg group flex items-center justify-center">
               <Image
-                src={mainImage || product.image || '/placeholder.jpg'}
+                src={mainImage || product.image || '/images/placeholder.png'}
                 alt={product.name}
                 fill
                 priority
                 loading="eager"
-                className="object-cover transition-transform duration-[2000ms] group-hover:scale-105"
+                className={`transition-transform duration-[2000ms] group-hover:scale-105 ${!(mainImage || product.image) ? 'p-12 opacity-20' : 'object-cover'}`}
                 sizes="(max-width: 768px) 100vw, 50vw"
-                style={{ objectFit: 'cover' }}
+                style={{ objectFit: (mainImage || product.image) ? 'cover' : 'contain' }}
               />
+              {!(mainImage || product.image) && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-[#C8C3BB]">
+                   <span className="font-serif text-2xl">Kraft Treasure</span>
+                   <span className="text-[10px] mt-2 tracking-[0.2em] uppercase">Archive Piece</span>
+                </div>
+              )}
             </div>
             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
               {(product.thumbnails || []).map((thumb, idx) => (

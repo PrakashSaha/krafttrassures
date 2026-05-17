@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { fetchAPI } from '@/lib/api';
+import { fetchAPI, formatRelation } from '@/lib/api';
 import { User, WishlistProduct, Product } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -26,15 +26,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [wishlist, setWishlist] = useState<WishlistProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Persistence management - LOAD from local storage immediately to prevent logout flash
-  // Consolidating startup logic into a single resilient effect below (line 103)
-
-  const fetchUserWishlist = useCallback(async (token: string, userDocId: string) => {
+  const fetchUserWishlist = useCallback(async (token: string, userId: string | number) => {
     try {
       const data = await fetchAPI('/wishlists', {
         token,
         params: { 
-          'filters[user][documentId][$eq]': userDocId,
           'populate[product][populate]': 'image' 
         }
       });
@@ -45,6 +41,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (!product) return null;
           
           const pData = product.attributes || product;
+          const prodId = product.id || pData.id;
+          const docId = product.documentId || pData.documentId;
           
           let imgUrl = '';
           if (pData.image) {
@@ -52,22 +50,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const imgArray = Array.isArray(imageData) ? imageData : [imageData];
               const firstImg = imgArray[0]?.attributes || imgArray[0];
               const url = firstImg?.url;
-              const baseUrl = process.env.NEXT_PUBLIC_STRAPI_URL;
-              if (!baseUrl) throw new Error('NEXT_PUBLIC_STRAPI_URL is not defined');
+              const baseUrl = (process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337').replace(/\/$/, '');
               imgUrl = url ? (url.startsWith('http') ? url : `${baseUrl}${url}`) : '';
           }
           
           const wishlistId = item.documentId || item.id;
           
           return {
-            id: product.id,
-            productId: pData.productId || product.documentId || pData.documentId,
+            id: prodId,
+            productId: docId || prodId,
             wishlistId: wishlistId,
             name: pData.name || '',
             category: pData.category || 'Product',
             price: pData.price || 0,
             image: imgUrl,
-            href: `/product/${pData.productId || pData.documentId || product.documentId || ''}`
+            href: `/product/${docId || prodId}`
           };
         }).filter(Boolean);
         
@@ -88,7 +85,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  // Persistence management via /api/auth/me
   useEffect(() => {
     const startup = async () => {
       const storedUser = localStorage.getItem('kt_user');
@@ -104,18 +100,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (localUser.jwt) {
           try {
             const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL;
-            const res = await fetch(`${STRAPI_URL}/api/users/me?populate=*`, {
+            const res = await fetch(`${STRAPI_URL}/api/users/me?fields=id,documentId,username,email,firstName,lastName,phone`, {
               headers: { 'Authorization': `Bearer ${localUser.jwt}` },
             });
 
             if (res.ok) {
               const freshData = await res.json();
-              const updatedUser = { ...localUser, ...freshData };
+              
+              let documentId = freshData.documentId || localUser.documentId;
+              let numericId = freshData.id || localUser.id || freshData.userId;
+              
+              console.log('[DEBUG] startup /users/me response:', { freshData, documentId, numericId });
+
+              // If documentId still missing or looks like an ID, it might be nested or we need another strategy
+              if (!documentId || documentId === String(numericId) || /^\d+$/.test(String(documentId))) {
+                try {
+                  const me = await fetchAPI('/users/me', { token: localUser.jwt });
+                  documentId = me.documentId || me.id; // Fallback
+                } catch (e) {
+                  console.error('Failed to fetch /users/me on hydration', e);
+                }
+              }
+
+              const updatedUser = { 
+                ...localUser, 
+                ...freshData, 
+                id: numericId,
+                documentId 
+              };
+              
               setUser(updatedUser);
               localStorage.setItem('kt_user', JSON.stringify(updatedUser));
               
-              if (updatedUser.jwt && (updatedUser.documentId || updatedUser.id)) {
-                await fetchUserWishlist(updatedUser.jwt, updatedUser.documentId || updatedUser.id);
+              if (updatedUser.jwt && updatedUser.documentId) {
+                await fetchUserWishlist(updatedUser.jwt, updatedUser.documentId);
               }
             } else if (res.status === 401) {
               setUser(null);
@@ -137,7 +155,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = useCallback(async (userData: User) => {
     try {
-      // Set the token in HTTP-only cookie via our API route
       await fetch('/api/auth/set-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -145,24 +162,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       const rawUser = (userData as any).data?.attributes || (userData as any).attributes || (userData as any).data || userData;
-      const normalizedUser = {
+      
+      let documentId = rawUser.documentId || userData.documentId;
+      
+      if (!documentId && (userData.jwt || rawUser.jwt)) {
+        try {
+          const me = await fetchAPI('/users/me', {
+            token: userData.jwt || rawUser.jwt,
+            params: { fields: 'id,documentId,username,email' }
+          });
+          console.log('[DEBUG] /users/me response:', me);
+          documentId = me.documentId || me.id;
+        } catch (e) {
+          console.error('Failed to fetch /users/me for documentId', e);
+        }
+      }
+
+      const normalizedUser: User = {
         ...rawUser,
+        id: rawUser.id || userData.id,
+        documentId: String(documentId || rawUser.documentId || ''), 
         firstName: rawUser.firstName || rawUser.first_name || rawUser.firstname,
         lastName: rawUser.lastName || rawUser.last_name || rawUser.lastname,
         jwt: userData.jwt || rawUser.jwt
       };
       
+      console.log('[LOGIN] normalizedUser', normalizedUser);
+      
       setUser(normalizedUser);
       localStorage.setItem('kt_user', JSON.stringify(normalizedUser));
       
-      if (userData.jwt && (userData.documentId || userData.id)) {
-        await fetchUserWishlist(userData.jwt, (userData.documentId || userData.id).toString());
-        toast.success(`Welcome back, ${userData.firstName || userData.username}!`, {
+      if (normalizedUser.jwt && normalizedUser.documentId) {
+        await fetchUserWishlist(normalizedUser.jwt, normalizedUser.documentId);
+        toast.success(`Welcome back, ${normalizedUser.firstName || normalizedUser.username}!`, {
           description: 'You have successfully signed in.',
         });
       }
     } catch (error) {
-      console.error('Login refactor error:', error);
+      console.error('Login error:', error);
       toast.error('Login failed during session setup');
     }
   }, [fetchUserWishlist]);
@@ -173,11 +210,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setWishlist([]);
       localStorage.removeItem('kt_user');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('auth-logout'));
+      }
       toast.info('Signed out successfully');
     } catch (error) {
       console.error('Logout error:', error);
     }
   }, []);
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      logout();
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('strapi-unauthorized', handleUnauthorized);
+      return () => window.removeEventListener('strapi-unauthorized', handleUnauthorized);
+    }
+  }, [logout]);
+
 
   const wishlistRef = React.useRef(wishlist);
   useEffect(() => {
@@ -185,19 +236,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [wishlist]);
 
   const addToWishlist = useCallback(async (product: WishlistProduct) => {
-    if (wishlistRef.current.some((p) => String(p.id) === String(product.id))) return;
+    const productDocumentId = product.productId || (product as any).documentId;
+    if (!productDocumentId) {
+      console.error('Cannot add to wishlist: Missing product documentId');
+      return;
+    }
+
+    if (wishlistRef.current.some((p) => String(p.productId) === String(productDocumentId) || String(p.id) === String(product.id))) return;
 
     setWishlist(prev => [...prev, product]);
     toast.success('Added to wishlist', {
       description: `${product.name} is now in your archive.`,
     });
     
-    if (user?.jwt && (user?.documentId || user?.id)) {
+    if (user?.jwt && user?.documentId) {
       try {
         const body = {
           data: {
-            user: user.documentId || user.id,
-            product: product.productId || product.id,
+            // Omit owner: injected by middleware
+            product: formatRelation(productDocumentId),
             added_at: new Date().toISOString()
           }
         };
@@ -208,14 +265,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           body: JSON.stringify(body)
         });
 
-        const entry = res.data?.data || res.data || res;
-        // Strapi v5 often puts ID at the top level of the data object
-        const newWishlistId = entry.documentId || entry.id || (entry.attributes?.documentId);
-
+        // Strapi v5 returns { data: { id, documentId, ... } }
+        const entry = res.data || res;
+        const newWishlistId = entry.documentId || entry.id;
 
         if (newWishlistId) {
           setWishlist(prev => prev.map(p => 
-            String(p.id) === String(product.id) ? { ...p, wishlistId: newWishlistId } : p
+            String(p.productId) === String(productDocumentId) ? { ...p, wishlistId: newWishlistId } : p
           ));
         }
       } catch (error: any) {
@@ -227,33 +283,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const removeFromWishlist = useCallback(async (productId: number | string, wishlistEntryId?: number | string) => {
     const itemToRemove = wishlistRef.current.find(p => String(p.id) === String(productId));
-    
     if (!itemToRemove) return;
 
     const wishlistId = wishlistEntryId || itemToRemove.wishlistId;
-    
     const updated = wishlistRef.current.filter(p => String(p.id) !== String(productId));
     setWishlist(updated);
     toast.info('Removed from wishlist');
 
     if (user?.jwt && wishlistId) {
       try {
-        const res = await fetchAPI(`/wishlists/${wishlistId}`, {
+        await fetchAPI(`/wishlists/${wishlistId}`, {
           method: 'DELETE',
           token: user.jwt
         });
         toast.success('Successfully removed from server archive');
       } catch (error: any) {
         console.error(`[WISHLIST] DELETE failed for ${wishlistId}:`, error);
-        
-        // If it's a 404, the item is already gone from the server
-        if (error.status === 404) {
-          console.warn(`[WISHLIST] Item ${wishlistId} already gone from server (404)`);
-          return;
-        }
+        if (error.status === 404) return;
 
         toast.error('Failed to sync removal with server');
-        // Rollback local state if server delete failed
         setWishlist(prev => {
           if (!prev.find(p => String(p.id) === String(productId))) {
             return [...prev, itemToRemove];
@@ -261,14 +309,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return prev;
         });
       }
-    } else {
-      const reason = !user?.jwt ? 'Missing JWT' : 'Missing wishlistId';
-        toast.error(`Sync error: ${reason}`);
     }
   }, [user]);
 
   const toggleWishlist = useCallback(async (product: Product) => {
-    const isCurrentlyIn = wishlistRef.current.some(p => String(p.id) === String(product.id));
+    const productDocumentId = product.productId || (product as any).documentId;
+    const isCurrentlyIn = wishlistRef.current.some(p => 
+      (p.productId && String(p.productId) === String(productDocumentId)) || 
+      String(p.id) === String(product.id)
+    );
+
     if (isCurrentlyIn) {
       await removeFromWishlist(product.id);
     } else {

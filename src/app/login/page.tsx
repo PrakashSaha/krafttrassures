@@ -176,95 +176,103 @@ export default function LoginPage() {
           </button>
         </div>
 
-        <div className="mx-auto max-w-[500px]">
-          {isLoginView ? (
-            /* Login Card */
-            <div className="flex flex-col border border-black/5 bg-white p-8 shadow-xl lg:p-12 animate-in fade-in zoom-in-95 duration-700">
-              <div className="mb-8 flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center bg-[#D33740] text-white">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        {isAuthenticated ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#D33740] border-t-transparent mb-6"></div>
+            <p className="font-serif text-2xl text-black">Authenticating your access...</p>
+            <p className="mt-2 text-sm text-[#595148]">One moment while we prepare your archive.</p>
+          </div>
+        ) : (
+          <div className="mx-auto max-w-[500px]">
+            {isLoginView ? (
+              /* Login Card */
+              <div className="flex flex-col border border-black/5 bg-white p-8 shadow-xl lg:p-12 animate-in fade-in zoom-in-95 duration-700">
+                <div className="mb-8 flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center bg-[#D33740] text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold tracking-[0.3em] text-[#C5AB7D] uppercase">Sign In</p>
+                    <h2 className="font-serif text-2xl text-black">Member Login</h2>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-[10px] font-bold tracking-[0.3em] text-[#C5AB7D] uppercase">Sign In</p>
-                  <h2 className="font-serif text-2xl text-black">Member Login</h2>
-                </div>
-              </div>
 
-              <form className="space-y-6" onSubmit={handleLogin}>
-                {loginError && <div className="p-4 text-[12px] font-bold tracking-wider text-white bg-[#D33740] uppercase">{loginError}</div>}
-                <AuthField label="Email" type="email" value={loginEmail} onChange={(e: any) => setLoginEmail(e.target.value)} placeholder="your@email.com" required />
-                <div className="relative">
-                  <AuthField label="Password" type={showLoginPass ? 'text' : 'password'} value={loginPassword} onChange={(e: any) => setLoginPassword(e.target.value)} placeholder="••••••••" required className="pr-12" />
-                  <button type="button" onClick={() => setShowLoginPass(!showLoginPass)} className="absolute right-4 top-[38px] text-[#595148] hover:text-black transition-colors">
-                    {showLoginPass ? <EyeOffIcon /> : <EyeIcon />}
+                <form className="space-y-6" onSubmit={handleLogin}>
+                  {loginError && <div className="p-4 text-[12px] font-bold tracking-wider text-white bg-[#D33740] uppercase">{loginError}</div>}
+                  <AuthField label="Email" type="email" value={loginEmail} onChange={(e: any) => setLoginEmail(e.target.value)} placeholder="your@email.com" required />
+                  <div className="relative">
+                    <AuthField label="Password" type={showLoginPass ? 'text' : 'password'} value={loginPassword} onChange={(e: any) => setLoginPassword(e.target.value)} placeholder="••••••••" required className="pr-12" />
+                    <button type="button" onClick={() => setShowLoginPass(!showLoginPass)} className="absolute right-4 top-[38px] text-[#595148] hover:text-black transition-colors">
+                      {showLoginPass ? <EyeOffIcon /> : <EyeIcon />}
+                    </button>
+                    <div className="mt-2 text-right">
+                      <Link href="/forgot-password" className="text-[10px] font-bold tracking-[0.1em] text-black/40 uppercase hover:text-[#D33740]">Forgot Password?</Link>
+                    </div>
+                  </div>
+                  <button type="submit" disabled={loginLoading} className="btn-primary w-full mt-4 disabled:opacity-50">
+                    {loginLoading ? 'Signing In...' : 'Sign In'}
                   </button>
-                  <div className="mt-2 text-right">
-                    <Link href="/forgot-password" className="text-[10px] font-bold tracking-[0.1em] text-black/40 uppercase hover:text-[#D33740]">Forgot Password?</Link>
-                  </div>
-                </div>
-                <button type="submit" disabled={loginLoading} className="btn-primary w-full mt-4 disabled:opacity-50">
-                  {loginLoading ? 'Signing In...' : 'Sign In'}
-                </button>
-              </form>
-              
-              <div className="mt-8 text-center border-t border-black/5 pt-6">
-                <button 
-                  onClick={() => setIsLoginView(false)}
-                  className="text-[10px] font-bold tracking-[0.2em] text-black/40 uppercase hover:text-[#D33740] transition-colors"
-                >
-                  Don't have an account? Create one
-                </button>
-              </div>
-            </div>
-          ) : (
-            /* Register Card */
-            <div className="flex flex-col border border-black/5 bg-white p-8 shadow-xl lg:p-12 animate-in fade-in zoom-in-95 duration-700">
-              <div className="mb-8 flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center bg-black text-white">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold tracking-[0.3em] text-[#C5AB7D] uppercase">Join Us</p>
-                  <h2 className="font-serif text-2xl text-black">Create Account</h2>
-                </div>
-              </div>
-
-              <form className="space-y-6" onSubmit={handleRegister}>
-                {regError && <div className="p-4 text-[12px] font-bold tracking-wider text-white bg-black uppercase">{regError}</div>}
+                </form>
                 
-                <AuthField label="Email" type="email" value={regEmail} onChange={(e: any) => setRegEmail(e.target.value)} placeholder="your@email.com" required />
-                <AuthField label="Phone Number" type="tel" value={regPhone} onChange={(e: any) => setRegPhone(e.target.value)} placeholder="Phone Number" required />
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="relative">
-                    <AuthField label="Password" type={showRegisterPass ? 'text' : 'password'} value={regPassword} onChange={(e: any) => setRegPassword(e.target.value)} placeholder="••••••••" required className="pr-12" />
-                    <button type="button" onClick={() => setShowRegisterPass(!showRegisterPass)} className="absolute right-4 top-[38px] text-[#595148] hover:text-black transition-colors">
-                      {showRegisterPass ? <EyeOffIcon /> : <EyeIcon />}
-                    </button>
+                <div className="mt-8 text-center border-t border-black/5 pt-6">
+                  <button 
+                    onClick={() => setIsLoginView(false)}
+                    className="text-[10px] font-bold tracking-[0.2em] text-black/40 uppercase hover:text-[#D33740] transition-colors"
+                  >
+                    Don't have an account? Create one
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Register Card */
+              <div className="flex flex-col border border-black/5 bg-white p-8 shadow-xl lg:p-12 animate-in fade-in zoom-in-95 duration-700">
+                <div className="mb-8 flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center bg-black text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
                   </div>
-                  <div className="relative">
-                    <AuthField label="Confirm" type={showRegisterConfirmPass ? 'text' : 'password'} value={regConfirmPassword} onChange={(e: any) => setRegConfirmPassword(e.target.value)} placeholder="••••••••" required className="pr-12" />
-                    <button type="button" onClick={() => setShowRegisterConfirmPass(!showRegisterConfirmPass)} className="absolute right-4 top-[38px] text-[#595148] hover:text-black transition-colors">
-                      {showRegisterConfirmPass ? <EyeOffIcon /> : <EyeIcon />}
-                    </button>
+                  <div>
+                    <p className="text-[10px] font-bold tracking-[0.3em] text-[#C5AB7D] uppercase">Join Us</p>
+                    <h2 className="font-serif text-2xl text-black">Create Account</h2>
                   </div>
                 </div>
-                <button type="submit" disabled={regLoading} className="btn-primary w-full mt-4 disabled:opacity-50">
-                  {regLoading ? 'Creating Profile...' : 'Register'}
-                </button>
-              </form>
 
-              <div className="mt-8 text-center border-t border-black/5 pt-6">
-                <button 
-                  onClick={() => setIsLoginView(true)}
-                  className="text-[10px] font-bold tracking-[0.2em] text-black/40 uppercase hover:text-black transition-colors"
-                >
-                  Already have an account? Sign In
-                </button>
+                <form className="space-y-6" onSubmit={handleRegister}>
+                  {regError && <div className="p-4 text-[12px] font-bold tracking-wider text-white bg-black uppercase">{regError}</div>}
+                  
+                  <AuthField label="Email" type="email" value={regEmail} onChange={(e: any) => setRegEmail(e.target.value)} placeholder="your@email.com" required />
+                  <AuthField label="Phone Number" type="tel" value={regPhone} onChange={(e: any) => setRegPhone(e.target.value)} placeholder="Phone Number" required />
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="relative">
+                      <AuthField label="Password" type={showRegisterPass ? 'text' : 'password'} value={regPassword} onChange={(e: any) => setRegPassword(e.target.value)} placeholder="••••••••" required className="pr-12" />
+                      <button type="button" onClick={() => setShowRegisterPass(!showRegisterPass)} className="absolute right-4 top-[38px] text-[#595148] hover:text-black transition-colors">
+                        {showRegisterPass ? <EyeOffIcon /> : <EyeIcon />}
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <AuthField label="Confirm" type={showRegisterConfirmPass ? 'text' : 'password'} value={regConfirmPassword} onChange={(e: any) => setRegConfirmPassword(e.target.value)} placeholder="••••••••" required className="pr-12" />
+                      <button type="button" onClick={() => setShowRegisterConfirmPass(!showRegisterConfirmPass)} className="absolute right-4 top-[38px] text-[#595148] hover:text-black transition-colors">
+                        {showRegisterConfirmPass ? <EyeOffIcon /> : <EyeIcon />}
+                      </button>
+                    </div>
+                  </div>
+                  <button type="submit" disabled={regLoading} className="btn-primary w-full mt-4 disabled:opacity-50">
+                    {regLoading ? 'Creating Profile...' : 'Register'}
+                  </button>
+                </form>
+
+                <div className="mt-8 text-center border-t border-black/5 pt-6">
+                  <button 
+                    onClick={() => setIsLoginView(true)}
+                    className="text-[10px] font-bold tracking-[0.2em] text-black/40 uppercase hover:text-black transition-colors"
+                  >
+                    Already have an account? Sign In
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       <style jsx>{`

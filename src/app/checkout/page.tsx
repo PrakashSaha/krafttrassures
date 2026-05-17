@@ -32,7 +32,7 @@ export default function CheckoutPage() {
       try {
         const data = await fetchAPI('/api/addresses', {
           token: user.jwt,
-          params: { 'filters[user][id][$eq]': user.id }
+          params: { 'filters[owner][documentId][$eq]': user.documentId }
         });
         if (data?.data) {
           const mapped = data.data.map((item: any) => ({
@@ -70,9 +70,8 @@ export default function CheckoutPage() {
         toast.error('Please select a valid shipping address');
         return;
       }
-      const addressString = `${selectedAddress.line}, ${selectedAddress.city}, ${selectedAddress.state} - ${selectedAddress.pin}. T: ${selectedAddress.phone}`;
       
-      const order = await checkout(addressString);
+      const order = await checkout(selectedAddress);
       
       if (order) {
         router.push(`/account/orders`);

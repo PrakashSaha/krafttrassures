@@ -68,8 +68,9 @@ export default function OnboardingModal() {
 
     setLoading(true);
     try {
-      // 1. Update User Profile
-      await fetchAPI(`/api/users/${user.id}`, {
+      // 1. Update User Profile — use numeric id for standard users-permissions endpoint
+      const userId = user.id;
+      await fetchAPI(`/api/users/${userId}`, {
         method: 'PUT',
         token: user.jwt,
         body: JSON.stringify({
@@ -90,7 +91,7 @@ export default function OnboardingModal() {
             city: form.addressCity,
             state: form.addressState,
             pin: form.addressPin,
-            user: user.id
+            // Omit owner: injected by middleware
           }
         })
       });

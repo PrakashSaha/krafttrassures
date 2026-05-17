@@ -47,7 +47,7 @@ export default function Testimonials({ reviews }: { reviews?: Review[] }) {
         <h2 className="font-serif text-3xl text-black md:text-4xl">What Our Connoisseurs Say</h2>
       </div>
 
-      <div className="group relative">
+      <div className="group/carousel relative">
         <div className="overflow-hidden">
           <div
             className="-ml-4 flex transition-transform duration-500 ease-out md:-ml-8 lg:-ml-12"
@@ -55,8 +55,8 @@ export default function Testimonials({ reviews }: { reviews?: Review[] }) {
           >
             {displayReviews.map((t) => (
               <div key={t.id} className="w-full flex-none py-4 pl-4 md:w-1/2 md:pl-8 lg:w-1/3 lg:pl-12">
-                <div className="group relative flex h-full flex-col items-center border border-black/5 bg-[#FAF7F2] p-8 text-center transition-all duration-500 hover:shadow-xl">
-                  <div className="absolute inset-0 z-0 translate-y-full bg-white transition-transform duration-500 ease-in-out group-hover:translate-y-0" />
+                <div className="group/card relative flex h-full flex-col items-center overflow-hidden border border-black/5 bg-[#FAF7F2] p-8 text-center transition-all duration-500 hover:shadow-xl">
+                  <div className="absolute inset-0 z-0 translate-y-full bg-[#FFF4B3] transition-transform duration-500 ease-in-out group-hover/card:translate-y-0" />
                   <div className="relative z-10 flex h-full flex-col items-center">
                     <div className="mb-8 flex gap-1">
                       {[...Array(t.rating || 5)].map((_, i) => <StarIcon key={i} />)}
@@ -110,7 +110,7 @@ function NavButton({ direction, onClick, position }: { direction: 'next' | 'prev
   return (
     <button
       onClick={onClick}
-      className={`absolute top-1/2 ${position}-0 z-20 -translate-y-1/2 bg-white p-4 text-black shadow-2xl opacity-0 transition-all duration-300 group-hover:opacity-100 hover:bg-black hover:text-white ${position === 'left' ? '-translate-x-4 group-hover:translate-x-0' : 'translate-x-4 group-hover:translate-x-0'}`}
+      className={`absolute top-1/2 ${position}-0 z-20 -translate-y-1/2 bg-white p-4 text-black shadow-2xl opacity-0 transition-all duration-300 group-hover/carousel:opacity-100 hover:bg-black hover:text-white ${position === 'left' ? '-translate-x-4 group-hover/carousel:translate-x-0' : 'translate-x-4 group-hover/carousel:translate-x-0'}`}
       aria-label={`${direction} slide`}
     >
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

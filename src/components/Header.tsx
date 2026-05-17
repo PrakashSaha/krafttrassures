@@ -15,7 +15,7 @@ import { Category } from '@/lib/types';
 
 
 export default function Header({ initialCategories = [] }: { initialCategories?: Category[] }) {
-  const { user, wishlist, logout } = useAuth();
+  const { user, wishlist, logout, loading } = useAuth();
   const { cart, cartCount } = useCart();
   const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -154,48 +154,50 @@ export default function Header({ initialCategories = [] }: { initialCategories?:
               </button>
 
               {/* Profile */}
-              {user ? (
-                <div className="relative" ref={profileRef}>
-                  <button onClick={() => setProfileOpen(!profileOpen)} className="flex items-center gap-1.5">
-                    <span className="flex h-8 w-8 items-center justify-center bg-[#D33740] text-[12px] font-bold text-white uppercase">
-                      {(user.firstName || user.username || 'U')[0]}
-                    </span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-black transition-transform ${profileOpen ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6"/></svg> {/* // CONTRAST FIX */}
-                  </button>
-                  {profileOpen && (
-                    <div className="absolute right-0 top-full mt-3 w-52 border border-[#C8C3BB] bg-white shadow-2xl"> {/* // CONTRAST FIX */}
-                      <div className="border-b border-[#C8C3BB] px-5 py-4"> {/* // CONTRAST FIX */}
-                        <p className="text-[9px] font-semibold tracking-[0.25em] text-[#3A3530] uppercase">Signed In</p> {/* // CONTRAST FIX */}
-                        <p className="font-serif text-[14px] text-black">{user.firstName || user.username}</p>
+                {loading ? (
+                  <div className="h-8 w-8 animate-pulse bg-zinc-100 rounded-full" />
+                ) : user ? (
+                  <div className="relative" ref={profileRef}>
+                    <button onClick={() => setProfileOpen(!profileOpen)} className="flex items-center gap-1.5">
+                      <span className="flex h-8 w-8 items-center justify-center bg-[#D33740] text-[12px] font-bold text-white uppercase">
+                        {(user.firstName || user.username || 'U')[0]}
+                      </span>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-black transition-transform ${profileOpen ? 'rotate-180' : ''}`}><path d="m6 9 6 6 6-6"/></svg> {/* // CONTRAST FIX */}
+                    </button>
+                    {profileOpen && (
+                      <div className="absolute right-0 top-full mt-3 w-52 border border-[#C8C3BB] bg-white shadow-2xl"> {/* // CONTRAST FIX */}
+                        <div className="border-b border-[#C8C3BB] px-5 py-4"> {/* // CONTRAST FIX */}
+                          <p className="text-[9px] font-semibold tracking-[0.25em] text-[#3A3530] uppercase">Signed In</p> {/* // CONTRAST FIX */}
+                          <p className="font-serif text-[14px] text-black">{user.firstName || user.username}</p>
+                        </div>
+                        <nav className="py-1">
+                          {[
+                            { label: 'Dashboard', href: '/account' },
+                            { label: 'My Profile', href: '/account/profile' },
+                            { label: 'My Address', href: '/account/address' },
+                            { label: 'My Wishlist', href: '/account/wishlist' },
+                            { label: 'My Orders', href: '/account/orders' },
+                            { label: 'My Transactions', href: '/account/transactions' },
+                          ].map((item) => (
+                            <Link key={item.label} href={item.href} onClick={() => setProfileOpen(false)} className="dropdown-link">
+                              {item.label}
+                            </Link>
+                          ))}
+                        </nav>
+                        <div className="border-t border-[#C8C3BB] px-5 py-3"> {/* // CONTRAST FIX */}
+                          <button onClick={handleLogout} className="flex items-center gap-2 text-[12px] font-medium text-[#D33740] hover:text-black transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                            Logout
+                          </button>
+                        </div>
                       </div>
-                      <nav className="py-1">
-                        {[
-                          { label: 'Dashboard', href: '/account' },
-                          { label: 'My Profile', href: '/account/profile' },
-                          { label: 'My Address', href: '/account/address' },
-                          { label: 'My Wishlist', href: '/account/wishlist' },
-                          { label: 'My Orders', href: '/account/orders' },
-                          { label: 'My Transactions', href: '/account/transactions' },
-                        ].map((item) => (
-                          <Link key={item.label} href={item.href} onClick={() => setProfileOpen(false)} className="dropdown-link">
-                            {item.label}
-                          </Link>
-                        ))}
-                      </nav>
-                      <div className="border-t border-[#C8C3BB] px-5 py-3"> {/* // CONTRAST FIX */}
-                        <button onClick={handleLogout} className="flex items-center gap-2 text-[12px] font-medium text-[#D33740] hover:text-black transition-colors">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                          Logout
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <Link href="/login" className="icon-btn" aria-label="Login">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                </Link>
-              )}
+                    )}
+                  </div>
+                ) : (
+                  <Link href="/login" className="icon-btn" aria-label="Login">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  </Link>
+                )}
 
               {/* Wishlist */}
               <Link href="/account/wishlist" className="icon-btn relative" aria-label="Wishlist">

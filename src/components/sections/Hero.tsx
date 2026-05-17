@@ -68,7 +68,7 @@ export default function Hero({ slides }: { slides?: HeroSlide[] }) {
                 </>
               ) : activeSlide.title}
             </h2>
-            <p className="mb-10 max-w-[480px] font-sans text-[13px] leading-relaxed text-[#3A3530] sm:text-[14px] lg:text-[15px]"> {/* // CONTRAST FIX */}
+            <p className="mb-10 max-w-[550px] font-sans text-[13px] leading-relaxed text-[#3A3530] sm:text-[14px] lg:text-[15px]"> {/* // CONTRAST FIX */}
               {activeSlide.subtitle}
             </p>
             
@@ -97,18 +97,24 @@ export default function Hero({ slides }: { slides?: HeroSlide[] }) {
                 <Link href={product.href} className="block h-full w-full relative">
                   {product.img ? (
                     <Image
-                      src={product.img.startsWith('http') ? product.img : (product.img.startsWith('/') ? product.img : `/images/${product.img}`)}
+                      src={product.img || '/images/placeholder.png'}
                       alt={product.name}
                       fill
                       priority={index === 0}
                       loading={index === 0 ? "eager" : "lazy"}
-                      className="object-cover transition-transform duration-[2000ms] ease-out group-hover:scale-105"
+                      className="object-cover transition-transform duration-[1000ms] ease-out group-hover:scale-105"
                       sizes="(max-width: 768px) 100vw, 50vw"
                       style={{ objectFit: 'cover' }}
                     />
                   ) : (
-                    <div className="absolute inset-0 bg-[#FAF7F2] flex items-center justify-center">
-                      <span className="font-serif text-[#C8C3BB] text-4xl">Kraft Treasure</span> {/* // CONTRAST FIX */}
+                    <div className="absolute inset-0 bg-[#FAF7F2] flex items-center justify-center overflow-hidden">
+                      <Image 
+                        src="/images/placeholder.png" 
+                        alt="Kraft Treasure" 
+                        fill 
+                        className="object-cover opacity-30 grayscale"
+                      />
+                      <span className="relative z-10 font-serif text-[#C8C3BB] text-4xl">Kraft Treasure</span>
                     </div>
                   )}
                   <div className="absolute inset-0 z-20 flex flex-col justify-end bg-gradient-to-t from-black/80 via-transparent p-8">

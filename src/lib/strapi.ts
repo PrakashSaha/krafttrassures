@@ -3,7 +3,30 @@ import { STORY_STEPS } from './data';
 import { Product, Category } from './types';
 
 const STRAPI_URL = (process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337').trim().replace(/\/$/, '');
-const STRAPI_TOKEN = process.env.STRAPI_API_TOKEN?.trim();
+const STRAPI_TOKEN = process.env.NEXT_PUBLIC_STRAPI_API_TOKEN?.trim();
+
+/**
+ * Fetch Adornments (Homepage Featured Blocks)
+ */
+export const getAdornments = cache(async () => {
+  const response = await fetchStrapi('adornments', {
+    populate: ['image'] // Strapi v5 handles media population simply if top-level
+  });
+  if (!response?.data) return [];
+
+  return response.data.map((item: any) => {
+    const data = flattenAttributes(item);
+    return {
+      id: data.id,
+      title: data.title,
+      subtitle: data.subtitle,
+      priceText: data.priceText,
+      image: getStrapiMedia(data.image),
+      href: data.href,
+      large: data.large
+    };
+  });
+});
 
 /**
  * Strapi v5 Response Flattener
@@ -11,20 +34,24 @@ const STRAPI_TOKEN = process.env.STRAPI_API_TOKEN?.trim();
  */
 function flattenAttributes(data: any): any {
   if (!data) return null;
-  if (Array.isArray(data)) return data.map(flattenAttributes);
+  
+  // Handle the 'data' wrapper if present (Strapi v4/v5 relationship structure)
+  if (data.data !== undefined) {
+    return flattenAttributes(data.data);
+  }
+
+  if (Array.isArray(data)) {
+    return data.map(flattenAttributes);
+  }
   
   // Handle the 'attributes' wrapper if present (v4 compatibility)
   let flattened = data.attributes ? { id: data.id, ...data.attributes } : data;
   
-  // Handle the 'data' wrapper for relationships
-  if (flattened.data !== undefined) {
-    flattened = flattenAttributes(flattened.data);
-  }
-
   // Recursively flatten all properties
   if (typeof flattened === 'object' && flattened !== null) {
     Object.keys(flattened).forEach(key => {
-      if (key !== 'data') {
+      // Don't re-flatten the 'id' or 'documentId'
+      if (key !== 'id' && key !== 'documentId') {
         flattened[key] = flattenAttributes(flattened[key]);
       }
     });
@@ -80,7 +107,6 @@ export async function fetchStrapi(
     }
     
     const res = await fetch(url, {
-      next: { revalidate: 60 },
       ...options,
       headers,
     });
@@ -161,26 +187,33 @@ const FALLBACK_CATEGORIES: Category[] = [
  */
 export const getHeroSliders = cache(async () => {
   const response = await fetchStrapi('hero-sliders', { 
-    'populate[products][populate]': 'image' 
+    // Explicit deep population for Strapi v5 relations
+    populate: {
+      products: {
+        populate: ['image', 'thumbnail']
+      }
+    }
   }, {
-    next: { revalidate: 3600 }
+    next: { revalidate: 0 } // bypass next cache in dev for direct CMS updates
   });
   
   if (!response?.data) return [];
 
-  return response.data.flatMap((slider: any) => {
-    const data = slider.attributes || slider;
-    const products = flattenAttributes(data.products) || [];
+  return response.data.flatMap((item: any) => {
+    const data = flattenAttributes(item);
+    if (!data) return [];
     
+    const products = data.products || [];
     if (!Array.isArray(products)) return [];
-
-    return products.map((product: any) => {
+    
+    return products.map((item: any) => {
+      const product = mapProduct(item);
       return {
-        title: data.title || "Kraft Treasure",
+        title: data.title || "Ancient Artistry Meet Luxury",
         subtitle: data.subtitle || "Authentic Arunachal Pradesh Handicrafts",
-        name: product.name || 'Untitled Piece',
-        img: getStrapiMedia(product.image),
-        href: `/product/${product.documentId}`, 
+        name: product.name,
+        img: product.thumbnail || product.image || '',
+        href: product.href, 
       };
     }).filter(Boolean);
   });
@@ -191,10 +224,10 @@ export const getHeroSliders = cache(async () => {
  */
 export const getProducts = cache(async (params?: Record<string, any>): Promise<Product[]> => {
   const response = await fetchStrapi('products', { 
-    populate: ['image', 'categories'],
+    populate: ['image', 'thumbnail', 'categories'],
     ...params 
   }, {
-    next: { revalidate: 300 }
+    next: { revalidate: 0 }
   });
   
   if (!response?.data) return [];
@@ -209,6 +242,7 @@ export const getProducts = cache(async (params?: Record<string, any>): Promise<P
       category: extractCategoryLabel(data.categories),
       price: data.price,
       image: getStrapiMedia(data.image),
+      thumbnail: getStrapiMedia(data.thumbnail),
       hoverImage: Array.isArray(data.image) && data.image.length > 1 ? getStrapiMedia(data.image[1]) : null,
       href: `/product/${data.documentId}`,
       stock: data.quantity || 0,
@@ -222,11 +256,11 @@ export const getProducts = cache(async (params?: Record<string, any>): Promise<P
  */
 export const getProductsWithMeta = cache(async (params?: Record<string, any>): Promise<{ products: Product[], meta: any }> => {
   const response = await fetchStrapi('products', { 
-    populate: ['image', 'categories'],
+    populate: ['image', 'thumbnail', 'categories'],
     'pagination[withCount]': true,
     ...params 
   }, {
-    next: { revalidate: 300 }
+    next: { revalidate: 0 }
   });
   
   if (!response?.data) return { products: [], meta: { pagination: { total: 0, pageCount: 0, page: 1, pageSize: 12 } } };
@@ -241,6 +275,7 @@ export const getProductsWithMeta = cache(async (params?: Record<string, any>): P
       category: extractCategoryLabel(data.categories),
       price: data.price,
       image: getStrapiMedia(data.image),
+      thumbnail: getStrapiMedia(data.thumbnail),
       hoverImage: Array.isArray(data.image) && data.image.length > 1 ? getStrapiMedia(data.image[1]) : null,
       href: `/product/${data.documentId}`,
       stock: data.quantity || 0,
@@ -251,13 +286,14 @@ export const getProductsWithMeta = cache(async (params?: Record<string, any>): P
   return { products, meta: response.meta };
 });
 
+
 /**
  * Fetch Single Product by ID (Uses Strapi documentId)
  */
 export const getProductById = cache(async (productId: string): Promise<Product | null> => {
   const response = await fetchStrapi('products', {
     'filters[documentId][$eq]': productId,
-    populate: ['image', 'categories'],
+    populate: ['image', 'thumbnail', 'categories'],
   });
   
   if (!response?.data || response.data.length === 0) return null;
@@ -280,15 +316,16 @@ function mapProduct(item: any): Product {
     category: extractCategoryLabel(data.categories),
     price: data.price,
     image: imageUrls[0] || null,
+    thumbnail: getStrapiMedia(data.thumbnail),
     thumbnails: imageUrls,
     material: data.material || 'Traditional Materials',
     origin: data.origin || data.otherOrigin || 'Arunachal Pradesh',
     otherOrigin: data.otherOrigin,
-    size: data.Size,
+    size: data.size,
     availability: (data.quantity > 0) ? 'In Stock' : 'Sold Out',
     stock: data.quantity || 0,
     description: data.description || '',
-    fullDescription: data.LongDescription || '',
+    fullDescription: data.longDescription || '',
     href: `/product/${data.documentId}`,
   };
 }
@@ -309,7 +346,6 @@ export const getCategories = cache(async (): Promise<Category[]> => {
       return {
         label: data.label,
         slug: data.slug,
-        description: data.description,
         image: getStrapiMedia(data.image),
         href: `/shop?category=${data.slug}`,
       };
@@ -359,7 +395,7 @@ export const getStorySteps = cache(async () => {
  */
 export const getInstagramFeeds = cache(async () => {
   const response = await fetchStrapi('instagram-feeds', { 
-    populate: { image: { populate: '*' } } // Deep populate for media
+    populate: ['image'] 
   });
   if (!response?.data) return [];
 

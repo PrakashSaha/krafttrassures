@@ -40,6 +40,12 @@ export const ProductCard = memo(({ product, isVisible = true }: ProductCardProps
   const handleAddToCart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
     addToCart(product);
     
     // If the item is in the wishlist, remove it when adding to cart
@@ -49,7 +55,7 @@ export const ProductCard = memo(({ product, isVisible = true }: ProductCardProps
         description: `${product.name} has been moved from your wishlist to the cart.`,
       });
     }
-  }, [product, addToCart, isInWishlist, toggleWishlist]);
+  }, [product, addToCart, isInWishlist, toggleWishlist, user, router]);
 
   return (
     <Link

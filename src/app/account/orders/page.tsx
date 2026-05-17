@@ -19,7 +19,6 @@ export default function OrdersPage() {
     fetchAPI('/api/orders', {
       token: user.jwt,
       params: {
-        'filters[user][id][$eq]': user.id,
         'sort': 'createdAt:desc'
       }
     })

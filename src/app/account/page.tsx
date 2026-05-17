@@ -37,7 +37,9 @@ export default function DashboardPage() {
     // Fetch Address Count
     fetchAPI('/api/addresses', {
       token: user.jwt,
-      params: { 'filters[user][id][$eq]': user.id }
+      params: {
+        'filters[owner][documentId][$eq]': user.documentId
+      }
     })
       .then(data => {
         if (data?.data) setAddressCount(data.data.length);
@@ -48,7 +50,7 @@ export default function DashboardPage() {
     fetchAPI('/api/orders', {
       token: user.jwt,
       params: {
-        'filters[user][id][$eq]': user.id,
+        'filters[owner][documentId][$eq]': user.documentId,
         'sort': 'createdAt:desc',
         'pagination[limit]': '3'
       }
