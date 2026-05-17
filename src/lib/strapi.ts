@@ -118,9 +118,10 @@ export async function fetchStrapi(
     }
 
     return await res.json();
-  } catch (error) {
-    console.error('❌ Strapi Connection Refused:', url || endpoint);
-    return null;
+  } catch (error: any) {
+    console.error('❌ Strapi Connection Refused:', url || endpoint, error.message);
+    // Throw error so Next.js error boundary catches it and shows the Server Down page
+    throw new Error('fetch failed: Connection Refused to backend server');
   }
 }
 
