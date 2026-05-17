@@ -26,10 +26,11 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     const fetchCategories = async () => {
       try {
         const res = await fetch('/api/categories');
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
         if (data.categories) setCategories(data.categories);
       } catch (err) {
-        console.error('Failed to fetch categories for search');
+        console.error('Failed to fetch categories for search:', err);
       }
     };
     fetchCategories();
@@ -51,7 +52,10 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       setHasMore(false);
       setIsLoading(true);
       fetch('/api/search?page=1')
-        .then(r => r.json())
+        .then(async r => {
+          if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
+          return r.json();
+        })
         .then(data => {
           if (data.products) {
             setResults(data.products);
@@ -59,7 +63,10 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
           }
           setIsLoading(false);
         })
-        .catch(() => setIsLoading(false));
+        .catch(err => {
+          console.error('Initial search fetch error:', err);
+          setIsLoading(false);
+        });
     } else {
       document.body.style.overflow = '';
       setQuery('');
@@ -92,6 +99,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         params.set('page', '1');
 
         const res = await fetch(`/api/search?${params.toString()}`);
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
         
         if (data.products) {
@@ -123,6 +131,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       params.set('page', nextPage.toString());
 
       const res = await fetch(`/api/search?${params.toString()}`);
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
 
       if (data.products) {
