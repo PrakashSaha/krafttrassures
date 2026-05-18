@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 
 export default function CheckoutPage() {
   const { user } = useAuth();
-  const { cart, cartTotal, clearCart, checkout, updateQty } = useCart();
+  const { cart, cartTotal, clearCart, checkout, updateQty, validateCartStock } = useCart();
   const router = useRouter();
 
   const [addresses, setAddresses] = useState<any[]>([]);
@@ -65,6 +65,17 @@ export default function CheckoutPage() {
     setError(null);
 
     try {
+      // Validate stock availability immediately before placing order
+      const stockCheck = await validateCartStock();
+      if (stockCheck.hasIssue) {
+        const issueList = stockCheck.issues.map((i: any) => `${i.name} (Only ${i.available} available)`).join(', ');
+        toast.error('Acquisition halted due to inventory shortage', {
+          description: `The following items in your collection do not have enough stock: ${issueList}`
+        });
+        setProcessing(false);
+        return;
+      }
+
       const selectedAddress = addresses.find(a => a.id === selectedAddressId);
       if (!selectedAddress) {
         toast.error('Please select a valid shipping address');

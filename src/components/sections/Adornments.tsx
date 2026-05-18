@@ -81,7 +81,7 @@ function AdornmentCard({ title, subtitle, priceText, image, href, index, total }
       <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/30 to-transparent transition-opacity duration-700 group-hover:opacity-60" />
       
       {/* Interactive Border */}
-      <div className="absolute inset-0 z-20 border border-white/0 transition-all duration-700 group-hover:border-white/10 group-hover:inset-6" />
+      <div className="absolute inset-0 z-20 border border-white/0 transition-all duration-700" />
 
       <div className="absolute inset-8 lg:inset-12 z-30 flex flex-col justify-end">
         <div className="transform transition-all duration-700">
@@ -91,9 +91,7 @@ function AdornmentCard({ title, subtitle, priceText, image, href, index, total }
           <h3 className="mb-4 font-serif text-3xl leading-[1.1] text-white lg:text-4xl group-hover:text-[#C5AB7D] transition-colors duration-500">
             {title}
           </h3>
-          
-          <div className="flex flex-col gap-6 opacity-0 translate-y-4 transition-all duration-700 group-hover:opacity-100 group-hover:translate-y-0">
-            <p className="font-sans text-[13px] tracking-wide text-white/60">
+          <p className="font-sans text-[13px] tracking-wide text-white/60">
               {priceText}
             </p>
             
@@ -101,7 +99,6 @@ function AdornmentCard({ title, subtitle, priceText, image, href, index, total }
               <span className="border-b border-white/30 pb-1 group-hover:border-[#C5AB7D] transition-colors">Explore Collection</span>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
             </div>
-          </div>
         </div>
       </div>
     </Link>
