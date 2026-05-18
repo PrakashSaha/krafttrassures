@@ -57,6 +57,9 @@ export const ProductCard = memo(({ product, isVisible = true }: ProductCardProps
     }
   }, [product, addToCart, isInWishlist, toggleWishlist, user, router]);
 
+  const defaultImage = product.thumbnail || product.image || '/images/placeholder.png';
+  const hoverImage = product.thumbnail ? product.image : product.hoverImage;
+
   return (
     <Link
       href={product.href}
@@ -65,15 +68,15 @@ export const ProductCard = memo(({ product, isVisible = true }: ProductCardProps
     >
       <div className="relative mb-4 aspect-[4/5] overflow-hidden border border-[#C8C3BB] bg-zinc-50">
         <Image
-          src={product.image || '/images/placeholder.png'}
+          src={defaultImage}
           alt={product.name}
           fill
           sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
           className="absolute inset-0 object-cover transition-opacity duration-700 group-hover:opacity-0"
         />
-        {product.hoverImage && (
+        {hoverImage && (
           <Image
-            src={product.hoverImage}
+            src={hoverImage}
             alt={`${product.name} alternate`}
             fill
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
