@@ -23,36 +23,16 @@ export async function POST(request: Request) {
 
     const { name, email, message } = validation.data;
 
+    const notificationProvider = process.env.NOTIFICATION_PROVIDER || 'smtp';
     const recipient = process.env.CONTACT_EMAIL_RECIPIENT || 'hello@krafttreasure.com';
     const emailUser = process.env.EMAIL_USER;
     const emailPass = process.env.EMAIL_PASS;
-    const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
-    const smtpPort = parseInt(process.env.SMTP_PORT || '587');
+    const smtpHost = process.env.SMTP_HOST;
+    const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587;
     const smtpSecure = process.env.SMTP_SECURE === 'true';
-    const sender = process.env.SMTP_DEFAULT_FROM || emailUser;
+    const sender = process.env.SMTP_DEFAULT_FROM || emailUser || 'system@krafttreasure.com';
 
-    if (!emailUser || !emailPass) {
-      console.error('CRITICAL: Email configuration is incomplete in environment variables.');
-      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
-    }
-
-    const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      secure: smtpSecure,
-      auth: {
-        user: emailUser,
-        pass: emailPass,
-      },
-    });
-
-    // 1. NOTIFICATION EMAIL (To the Team)
-    const adminMailOptions = {
-      from: `"Kraft Treasure System" <${sender}>`,
-      to: recipient,
-      subject: `New Heritage Enquiry: ${name}`,
-      replyTo: email,
-      html: `
+    const adminMailHtml = `
         <div style="font-family: 'Playfair Display', serif; padding: 40px; color: #1a1a1a; background-color: #FAF7F2;">
           <div style="max-width: 600px; margin: 0 auto; background: #ffffff; padding: 40px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
             <div style="text-align: center; margin-bottom: 30px;">
@@ -80,15 +60,9 @@ export async function POST(request: Request) {
             </div>
           </div>
         </div>
-      `,
-    };
+    `;
 
-    // 2. CONFIRMATION EMAIL (To the Customer)
-    const customerMailOptions = {
-      from: `"Kraft Treasure" <${sender}>`,
-      to: email,
-      subject: `We've Received Your Enquiry - Kraft Treasure`,
-      html: `
+    const customerMailHtml = `
         <div style="font-family: 'Playfair Display', serif; padding: 40px; color: #1a1a1a; background-color: #FAF7F2;">
           <div style="max-width: 600px; margin: 0 auto; background: #ffffff; padding: 40px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
             <div style="text-align: center; margin-bottom: 30px;">
@@ -123,7 +97,52 @@ export async function POST(request: Request) {
             </div>
           </div>
         </div>
-      `,
+    `;
+
+    if (notificationProvider === 'console') {
+      console.log('==================================================');
+      console.log('✉️  [FRONTEND EMAIL CONSOLE PROVIDER]');
+      console.log('--------------------------------------------------');
+      console.log(`FROM: ${sender}`);
+      console.log(`TO (Team): ${recipient}`);
+      console.log(`SUBJECT: New Heritage Enquiry: ${name}`);
+      console.log(`MESSAGE:\n"${message}"`);
+      console.log('--------------------------------------------------');
+      console.log(`TO (Customer): ${email}`);
+      console.log(`SUBJECT: We've Received Your Enquiry - Kraft Treasure`);
+      console.log('==================================================');
+
+      return NextResponse.json({ message: 'Enquiry recorded in console log successfully' }, { status: 200 });
+    }
+
+    if (!emailUser || !emailPass || !smtpHost) {
+      console.error('CRITICAL: Email credentials or SMTP host is incomplete in environment variables.');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpSecure,
+      auth: {
+        user: emailUser,
+        pass: emailPass,
+      },
+    });
+
+    const adminMailOptions = {
+      from: `"Kraft Treasure System" <${sender}>`,
+      to: recipient,
+      subject: `New Heritage Enquiry: ${name}`,
+      replyTo: email,
+      html: adminMailHtml,
+    };
+
+    const customerMailOptions = {
+      from: `"Kraft Treasure" <${sender}>`,
+      to: email,
+      subject: `We've Received Your Enquiry - Kraft Treasure`,
+      html: customerMailHtml,
     };
 
     // Send both emails
