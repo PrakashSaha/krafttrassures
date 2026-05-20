@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import Topbar from '@/components/sections/Topbar';
 
 export default function LoginPage() {
   const { login, isAuthenticated, loading } = useAuth();
@@ -146,7 +145,6 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen bg-[#FAF7F2]">
-      <Topbar />
       
       <div className="mx-auto max-w-[1100px] px-6 py-16 lg:px-12 lg:py-24">
         {/* Page Header */}

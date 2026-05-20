@@ -1,5 +1,4 @@
 import React from 'react';
-import Topbar from '@/components/sections/Topbar';
 import Hero from '@/components/sections/Hero';
 import Intro from '@/components/sections/Intro';
 import Collections from '@/components/sections/Collections';
@@ -42,7 +41,6 @@ export default async function Home() {
 
   return (
     <>
-      <Topbar />
       <main className="min-h-screen bg-white">
         <Hero slides={heroSlides} />
         <Intro />

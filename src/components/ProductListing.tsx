@@ -10,6 +10,7 @@ import GridToggle from './GridToggle';
 import Link from 'next/link';
 import Pagination from './Pagination';
 import { Product, Category } from '@/lib/types';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface ProductListingProps {
   initialProducts: Product[];
@@ -38,10 +39,14 @@ export default function ProductListing({
   pageCount,
   currentPage
 }: ProductListingProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [minPrice, setMinPrice] = useState(initialMin);
   const [maxPrice, setMaxPrice] = useState(initialMax);
   const [cols, setCols] = useState(gridCols);
   const [isUpdating, setIsUpdating] = useState(false);
+
+  const stockFilter = searchParams.get('stock') || 'all';
 
   // Sync state and manage loading state when products change
   useEffect(() => {
@@ -56,6 +61,18 @@ export default function ProductListing({
 
     return () => clearTimeout(timer);
   }, [initialProducts, initialMin, initialMax, gridCols]);
+
+  const handleStockChange = (value: string) => {
+    setIsUpdating(true);
+    const params = new URLSearchParams(searchParams.toString());
+    if (value === 'in') {
+      params.set('stock', 'true');
+    } else {
+      params.delete('stock');
+    }
+    params.delete('page'); // Reset to page 1
+    router.replace(`/shop?${params.toString()}`, { scroll: false });
+  };
 
   const products = initialProducts;
 
@@ -86,13 +103,25 @@ export default function ProductListing({
             <section>
               <p className="text-[10px] tracking-[0.3em] uppercase text-[#3A3530] font-sans mb-3">Availability</p> {/* // CONTRAST FIX */}
               <div className="space-y-2">
-                <label className="flex items-center justify-between px-4 py-3 border border-[#C8C3BB] bg-white text-[11px] tracking-[0.16em] uppercase font-sans cursor-pointer"> {/* // CONTRAST FIX */}
+                <label className={`flex items-center justify-between px-4 py-3 border border-[#C8C3BB] text-[11px] tracking-[0.16em] uppercase font-sans cursor-pointer transition-colors ${stockFilter !== 'true' ? 'bg-white font-bold text-black' : 'bg-white/70 hover:bg-white text-[#3A3530]'}`}> {/* // CONTRAST FIX */}
                   <span>All availability</span>
-                  <input type="radio" name="stock" defaultChecked className="h-3 w-3 border-[#C8C3BB] text-[#8C6E3F] focus:ring-0" /> {/* // CONTRAST FIX */}
+                  <input 
+                    type="radio" 
+                    name="stock" 
+                    checked={stockFilter !== 'true'} 
+                    onChange={() => handleStockChange('all')}
+                    className="h-3 w-3 border-[#C8C3BB] text-[#8C6E3F] focus:ring-0" 
+                  />
                 </label>
-                <label className="flex items-center justify-between px-4 py-3 border border-[#C8C3BB] bg-white/70 text-[#3A3530] text-[11px] tracking-[0.16em] uppercase font-sans cursor-pointer hover:bg-white transition-colors"> {/* // CONTRAST FIX */}
+                <label className={`flex items-center justify-between px-4 py-3 border border-[#C8C3BB] text-[11px] tracking-[0.16em] uppercase font-sans cursor-pointer transition-colors ${stockFilter === 'true' ? 'bg-white font-bold text-black' : 'bg-white/70 hover:bg-white text-[#3A3530]'}`}> {/* // CONTRAST FIX */}
                   <span>In stock</span>
-                  <input type="radio" name="stock" className="h-3 w-3 border-[#C8C3BB] text-[#8C6E3F] focus:ring-0" /> {/* // CONTRAST FIX */}
+                  <input 
+                    type="radio" 
+                    name="stock" 
+                    checked={stockFilter === 'true'} 
+                    onChange={() => handleStockChange('in')}
+                    className="h-3 w-3 border-[#C8C3BB] text-[#8C6E3F] focus:ring-0" 
+                  />
                 </label>
               </div>
             </section>

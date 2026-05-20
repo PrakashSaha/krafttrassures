@@ -1,5 +1,4 @@
 import React from 'react';
-import Topbar from '@/components/sections/Topbar';
 import { getProducts, getCategories, getProductsWithMeta } from '@/lib/strapi';
 import Link from 'next/link';
 import ProductListing from '@/components/ProductListing';
@@ -36,6 +35,7 @@ export default async function ShopPage({
     max?: string;
     cols?: string;
     page?: string;
+    stock?: string;
   }>;
 }) {
   const resolvedParams = await searchParams;
@@ -46,14 +46,16 @@ export default async function ShopPage({
   const maxPrice = resolvedParams?.max || '';
   const gridCols = resolvedParams?.cols || '4';
   const currentPage = parseInt(resolvedParams?.page || '1');
+  const showOnlyInStock = resolvedParams?.stock === 'true';
   const pageSize = 12;
-
+ 
   // Fetch data from Strapi with full filters and pagination
   const { products, meta } = await getProductsWithMeta({
     'filters[categories][slug][$eq]': currentCategory || undefined,
     'filters[name][$containsi]': searchQuery || undefined,
     'filters[price][$gte]': minPrice || undefined,
     'filters[price][$lte]': maxPrice || undefined,
+    'filters[quantity][$gt]': showOnlyInStock ? '0' : undefined,
     'sort[0]': currentSort === 'price_asc' ? 'price:asc' : currentSort === 'price_desc' ? 'price:desc' : 'createdAt:desc',
     'pagination[page]': currentPage,
     'pagination[pageSize]': pageSize,
@@ -72,7 +74,6 @@ export default async function ShopPage({
 
   return (
     <div className="min-h-screen bg-white">
-      <Topbar />
 
       {/* Hero Header */}
       <section className="mx-auto max-w-[1440px] px-6 pt-16 pb-12 text-center lg:px-12 lg:pt-24">

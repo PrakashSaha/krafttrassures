@@ -1,7 +1,6 @@
 import { getProductById } from '@/lib/strapi';
 import ProductDetailView from '@/components/ProductDetailView';
 import Link from 'next/link';
-import Topbar from '@/components/sections/Topbar';
 import { Metadata } from 'next';
 
 export async function generateMetadata({ params }: { params: Promise<{ productId: string }> }): Promise<Metadata> {
@@ -53,7 +52,6 @@ export default async function ProductDetailsPage({ params }: { params: Promise<{
 
   return (
     <>
-      <Topbar />
       <ProductDetailView product={product} relatedProducts={relatedProducts} />
     </>
   );

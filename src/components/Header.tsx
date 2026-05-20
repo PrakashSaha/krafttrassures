@@ -59,6 +59,27 @@ export default function Header({ initialCategories = [] }: { initialCategories?:
         onSearchOpen={() => setSearchOpen(true)}
       />
 
+      {/* Announcement Bar */}
+      <div className="relative z-[60]">
+        <div className="hidden w-full border-b border-white/10 bg-black py-3 text-white lg:block">
+          <div className="mx-auto flex max-w-[1440px] items-center justify-center gap-12 px-12">
+            <div className="flex items-center gap-3">
+              <div className="h-1.5 w-1.5 rounded-full bg-[#C5AB7D]" />
+              <span className="font-sans text-[10px] font-bold tracking-[0.2em] text-white/90 uppercase">
+                All India fast delivery
+              </span>
+            </div>
+            <div className="h-4 w-px bg-white/20" />
+            <div className="flex items-center gap-3">
+              <div className="h-1.5 w-1.5 rounded-full bg-[#C5AB7D]" />
+              <span className="font-sans text-[10px] font-bold tracking-[0.2em] text-white/90 uppercase">
+                Easy returns and refunds
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <header className="sticky top-0 right-0 left-0 z-50 border-b border-[#C8C3BB] bg-white/95 shadow-sm backdrop-blur-md"> {/* // CONTRAST FIX */}
         <div className="relative mx-auto w-full max-w-[1440px]">
           <nav className="flex items-center justify-between px-6 py-3 lg:px-12 lg:py-4">

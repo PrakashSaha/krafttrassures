@@ -1,11 +1,9 @@
 import React from 'react';
 import Link from 'next/link';
-import Topbar from '@/components/sections/Topbar';
 
 export default function NotFound() {
   return (
     <div className="flex min-h-screen flex-col bg-[#FAF7F2]">
-      <Topbar />
       <main className="flex flex-1 items-center justify-center px-6 py-24">
         <div className="max-w-lg text-center animate-in fade-in slide-in-from-bottom-8 duration-1000">
           <p className="mb-6 font-sans text-[10px] font-bold tracking-[0.4em] text-[#C5AB7D] uppercase">

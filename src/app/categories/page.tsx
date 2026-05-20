@@ -1,5 +1,4 @@
 import React from 'react';
-import Topbar from '@/components/sections/Topbar';
 import { getCategories } from '@/lib/strapi';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -9,7 +8,6 @@ export default async function CategoriesPage() {
 
   return (
     <>
-      <Topbar />
       <main className="min-h-screen bg-[#FAF7F2] py-20 lg:py-32">
         <div className="mx-auto max-w-[1440px] px-6 lg:px-12">
           {/* Header */}
