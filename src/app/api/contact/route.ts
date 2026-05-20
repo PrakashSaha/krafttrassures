@@ -23,17 +23,23 @@ export async function POST(request: Request) {
 
     const { name, email, message } = validation.data;
 
-    const recipient = process.env.CONTACT_EMAIL_RECIPIENT;
+    const recipient = process.env.CONTACT_EMAIL_RECIPIENT || 'hello@krafttreasure.com';
     const emailUser = process.env.EMAIL_USER;
     const emailPass = process.env.EMAIL_PASS;
+    const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+    const smtpPort = parseInt(process.env.SMTP_PORT || '587');
+    const smtpSecure = process.env.SMTP_SECURE === 'true';
+    const sender = process.env.SMTP_DEFAULT_FROM || emailUser;
 
-    if (!recipient || !emailUser || !emailPass) {
+    if (!emailUser || !emailPass) {
       console.error('CRITICAL: Email configuration is incomplete in environment variables.');
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }
 
     const transporter = nodemailer.createTransport({
-      service: 'gmail', // or your SMTP service
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpSecure,
       auth: {
         user: emailUser,
         pass: emailPass,
@@ -42,7 +48,7 @@ export async function POST(request: Request) {
 
     // 1. NOTIFICATION EMAIL (To the Team)
     const adminMailOptions = {
-      from: `"Kraft Treasure System" <${emailUser}>`,
+      from: `"Kraft Treasure System" <${sender}>`,
       to: recipient,
       subject: `New Heritage Enquiry: ${name}`,
       replyTo: email,
@@ -79,7 +85,7 @@ export async function POST(request: Request) {
 
     // 2. CONFIRMATION EMAIL (To the Customer)
     const customerMailOptions = {
-      from: `"Kraft Treasure" <${emailUser}>`,
+      from: `"Kraft Treasure" <${sender}>`,
       to: email,
       subject: `We've Received Your Enquiry - Kraft Treasure`,
       html: `
