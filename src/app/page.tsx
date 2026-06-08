@@ -14,8 +14,20 @@ import TrustedBy from '@/components/sections/TrustedBy';
 import Instagram from '@/components/sections/Instagram';
 import Features from '@/components/sections/Features';
 import { getHeroSliders, getProducts, getCategories, getTestimonials, getStorySteps, getInstagramFeeds, getAdornments } from '@/lib/strapi';
+import { getTranslations } from 'next-intl/server';
+import { Metadata } from 'next';
 
-export default async function Home() {
+export async function generateMetadata({ params }: { params: Promise<any> }): Promise<Metadata> {
+  
+  const t = await getTranslations('hero');
+  return {
+    title: t('title'),
+    description: t('subtitle'),
+  };
+}
+
+export default async function Home({ params }: { params: Promise<any> }) {
+  
   // Parallel fetching for all sections
   const [
     heroSlides, 

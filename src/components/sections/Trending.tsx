@@ -3,9 +3,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ProductCard } from '../ProductCard';
+import { useTranslations } from 'next-intl';
 import { Product } from '@/lib/types';
 
 export default function Trending({ products }: { products?: Product[] }) {
+  const t = useTranslations('sections');
   const [isVisible, setIsVisible] = useState(true);
   const sectionRef = useRef<HTMLElement>(null);
 
@@ -29,13 +31,13 @@ export default function Trending({ products }: { products?: Product[] }) {
   return (
     <section ref={sectionRef} className="mx-auto w-full max-w-[1440px] px-6 pt-10 pb-20 lg:px-12">
       <div className={`mb-12 text-center transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-        <p className="mb-3 font-sans text-[10px] tracking-[0.4em] text-[#C5AB7D] uppercase md:text-xs">Most Wanted</p>
-        <h2 className="font-serif text-3xl leading-tight text-black md:text-4xl lg:text-5xl">Trending Products</h2>
+        <p className="mb-3 font-sans text-[10px] tracking-[0.4em] text-[#C5AB7D] uppercase md:text-xs">{t('trending_subtitle')}</p>
+        <h2 className="font-serif text-3xl leading-tight text-black md:text-4xl lg:text-5xl">{t('trending_title')}</h2>
       </div>
 
       <div className="mb-12 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 lg:gap-4">
-        {displayProducts.map((product) => (
-          <ProductCard key={product.id} product={product} isVisible={isVisible} />
+        {displayProducts.map((product, index) => (
+          <ProductCard key={product.id} product={product} isVisible={isVisible} priority={index < 4} />
         ))}
       </div>
 

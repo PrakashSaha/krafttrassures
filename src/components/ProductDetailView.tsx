@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { Product } from '@/lib/types';
 import { ProductCard } from './ProductCard';
+import { useTranslations } from 'next-intl';
 
 export default function ProductDetailView({ 
   product, 
@@ -16,6 +17,8 @@ export default function ProductDetailView({
   product: Product; 
   relatedProducts?: Product[];
 }) {
+  const t = useTranslations('product');
+  const tShop = useTranslations('shop');
   const { user, toggleWishlist, isInWishlist } = useAuth();
   const { addToCart } = useCart();
   const router = useRouter();
@@ -28,7 +31,7 @@ export default function ProductDetailView({
   const isWishlisted = user && isInWishlist(product.id);
 
   const formattedPrice = typeof product.price === 'number' 
-    ? `₹${product.price.toLocaleString('en-IN')}` 
+    ? `₹$<span className="notranslate">{product.price.toLocaleString('en-IN')}</span>` 
     : product.price;
 
   const numericPrice = typeof product.price === 'number' 
@@ -137,7 +140,7 @@ export default function ProductDetailView({
                 <span className={`rounded-full px-3 py-1 text-[10px] font-bold tracking-widest uppercase ${
                   product.stock === 0 ? 'bg-red-100 text-red-600' : 'bg-[#D6F0DD] text-[#1A6B30]'
                 }`}>
-                  {product.stock === 0 ? 'Sold Out' : (product.availability || 'In Stock')}
+                  {product.stock === 0 ? tShop('out_of_stock') : (product.availability === 'In Stock' ? tShop('in_stock') : product.availability)}
                 </span>
                 {product.stock !== undefined && product.stock > 0 && product.stock <= 5 && (
                   <span className="text-[10px] font-bold tracking-widest text-[#D33740] uppercase animate-pulse">
@@ -152,9 +155,9 @@ export default function ProductDetailView({
             </p>
 
             <div className="mb-12 grid grid-cols-2 gap-8 border-y border-[#C8C3BB] py-10">
-              <MetaItem label="Material" value={product.material || 'Traditional'} />
-              <MetaItem label="Size / Dimensions" value={product.size || 'Standard'} />
-              <MetaItem label="Heritage Origin" value={product.origin || 'Arunachal Pradesh'} />
+              <MetaItem label={t('material')} value={product.material || 'Traditional'} />
+              <MetaItem label={t('size')} value={product.size || 'Standard'} />
+              <MetaItem label={t('origin')} value={product.origin || 'Arunachal Pradesh'} />
             </div>
 
             {/* Actions */}
@@ -176,7 +179,7 @@ export default function ProductDetailView({
                   ${isAdding ? 'bg-black' : ''}`}
                 disabled={isAdding || product.stock === 0}
               >
-                {product.stock === 0 ? 'Out of Stock' : (isAdding ? 'Added to Collection' : 'Add To Collection')}
+                {product.stock === 0 ? tShop('out_of_stock') : tShop('add_to_cart')}
               </button>
 
               <button
@@ -193,7 +196,7 @@ export default function ProductDetailView({
         <div className="mt-24 border-t border-[#C8C3BB] pt-16">
           <div className="mx-auto max-w-4xl">
             <div className="flex gap-12 border-b border-[#C8C3BB]">
-              {['description', 'provenance'].map(tab => (
+              {['description', 'provenance', 'story behind'].map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -206,7 +209,7 @@ export default function ProductDetailView({
             
             <div className="mt-8 border-2 border-[#C5AB7D] bg-white p-10 shadow-sm">
               <div className="font-sans text-[16px] leading-relaxed text-[#3A3530]">
-                {activeTab === 'description' ? (
+                {activeTab === 'description' && (
                   <div className="space-y-4">
                     <p className="font-serif text-xl italic text-[#8C6E3F] mb-6 border-b border-[#C5AB7D]/20 pb-4">
                       {product.description || "No summary available."}
@@ -215,7 +218,9 @@ export default function ProductDetailView({
                       {product.fullDescription || "No detailed description provided."}
                     </div>
                   </div>
-                ) : (
+                )}
+                
+                {activeTab === 'provenance' && (
                   <div className="space-y-6">
                     <div className="flex items-center gap-4 text-[#8C6E3F]">
                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -229,6 +234,41 @@ export default function ProductDetailView({
                     </p>
                   </div>
                 )}
+
+                {activeTab === 'story behind' && (
+                  <div className="space-y-6">
+                    {(!product.cosmic_story && !product.ancient_utility && !product.modern_utility) ? (
+                      <p className="italic text-black/60">Story and historical utility are currently being documented for this artifact.</p>
+                    ) : (
+                      <>
+                        {product.cosmic_story && (
+                          <div>
+                            <h3 className="font-serif text-xl text-[#8C6E3F] mb-2">Cosmic Story</h3>
+                            <p className="leading-relaxed text-black/70">
+                              {product.cosmic_story}
+                            </p>
+                          </div>
+                        )}
+                        {product.ancient_utility && (
+                          <div className={product.cosmic_story ? "border-t border-[#C5AB7D]/20 pt-4" : ""}>
+                            <h3 className="font-serif text-xl text-[#8C6E3F] mb-2">Ancient Utility</h3>
+                            <p className="leading-relaxed text-black/70">
+                              {product.ancient_utility}
+                            </p>
+                          </div>
+                        )}
+                        {product.modern_utility && (
+                          <div className={(product.cosmic_story || product.ancient_utility) ? "border-t border-[#C5AB7D]/20 pt-4" : ""}>
+                            <h3 className="font-serif text-xl text-[#8C6E3F] mb-2">Modern Utility</h3>
+                            <p className="leading-relaxed text-black/70">
+                              {product.modern_utility}
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -239,8 +279,8 @@ export default function ProductDetailView({
           <div className="mt-32">
             <div className="mb-12 flex items-center justify-between">
               <div>
-                <p className="mb-2 text-[10px] font-bold tracking-[0.4em] text-[#C5AB7D] uppercase">More to Explore</p>
-                <h2 className="font-serif text-3xl text-black">You May Also Like</h2>
+                <p className="mb-2 text-[10px] font-bold tracking-[0.4em] text-[#C5AB7D] uppercase">{t('related')}</p>
+                <h2 className="font-serif text-3xl text-black">{t('you_may_like')}</h2>
               </div>
               <Link href="/shop" className="text-[10px] font-bold tracking-[0.2em] uppercase border-b border-black pb-1 hover:text-[#8C6E3F] transition-colors">
                 View Entire Collection

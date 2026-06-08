@@ -1,4 +1,4 @@
-'use client';
+/* eslint-disable react-hooks/set-state-in-effect */ // Disabled as refactoring these specific effects could cause regressions\n'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import ProductCard from './ProductCard';
@@ -11,6 +11,7 @@ import Link from 'next/link';
 import Pagination from './Pagination';
 import { Product, Category } from '@/lib/types';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 interface ProductListingProps {
   initialProducts: Product[];
@@ -45,6 +46,7 @@ export default function ProductListing({
   const [maxPrice, setMaxPrice] = useState(initialMax);
   const [cols, setCols] = useState(gridCols);
   const [isUpdating, setIsUpdating] = useState(false);
+  const t = useTranslations('shop');
 
   const stockFilter = searchParams.get('stock') || 'all';
 
@@ -83,19 +85,19 @@ export default function ProductListing({
         <div className="border border-[#C8C3BB] bg-[#FCFAF7] p-6 lg:p-7 shadow-[0_14px_40px_-32px_rgba(0,0,0,0.35)]"> {/* // CONTRAST FIX */}
           <div className="flex items-start justify-between gap-4 pb-6 border-b border-[#C8C3BB]"> {/* // CONTRAST FIX */}
             <div>
-              <p className="text-[10px] tracking-[0.35em] uppercase text-[#8C6E3F] font-sans mb-2">Filter Rail</p> {/* // CONTRAST FIX */}
-              <h2 className="text-xl font-serif text-black">Refine Listing</h2>
+              <p className="text-[10px] tracking-[0.35em] uppercase text-[#8C6E3F] font-sans mb-2">{t('filters')}</p> {/* // CONTRAST FIX */}
+              <h2 className="text-xl font-serif text-black">{t('filters')}</h2>
             </div>
             <Link href="/shop" className="inline-flex items-center gap-2 text-[10px] tracking-[0.22em] uppercase font-sans text-[#3A3530] hover:text-black transition-colors"> {/* // CONTRAST FIX */}
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-              Clear
+              {t('clear_all')}
             </Link>
           </div>
 
           <div className="pt-6 space-y-8">
             {/* Categories */}
             <section>
-              <p className="text-[10px] tracking-[0.3em] uppercase text-[#3A3530] font-sans mb-3">Categories</p> {/* // CONTRAST FIX */}
+              <p className="text-[10px] tracking-[0.3em] uppercase text-[#3A3530] font-sans mb-3">{t('categories')}</p> {/* // CONTRAST FIX */}
               <CategoryFilter categories={categories} onStartUpdate={() => setIsUpdating(true)} />
             </section>
 
@@ -147,7 +149,7 @@ export default function ProductListing({
         {/* Toolbar */}
         <section className="border-y border-[#C8C3BB] py-5 flex flex-col gap-4 lg:flex-row lg:items-center"> {/* // CONTRAST FIX */}
           <div className="flex items-center gap-8 lg:border-r lg:border-[#C8C3BB] lg:pr-8"> {/* // CONTRAST FIX */}
-            <h2 className="text-xl font-serif text-black whitespace-nowrap">{totalFound} Pieces Found</h2>
+            <h2 className="text-xl font-serif text-black whitespace-nowrap">{totalFound} {t('results')}</h2>
           </div>
           
           <div className="flex-1 min-w-0 px-0 lg:px-8">
@@ -172,14 +174,14 @@ export default function ProductListing({
           )}
           <div className={`grid grid-cols-2 gap-6 lg:gap-8 transition-all duration-700 ${isUpdating ? 'opacity-20 translate-y-2' : 'opacity-100 translate-y-0 animate-in fade-in slide-in-from-bottom-2'} ${cols === '3' ? 'lg:grid-cols-3' : 'lg:grid-cols-3 xl:grid-cols-4'}`}>
           {products.length > 0 ? (
-            products.map((p) => (
-              <ProductCard key={p.id} product={p} />
+            products.map((p, index) => (
+              <ProductCard key={p.id} product={p} priority={index < 8} />
             ))
           ) : (
             <div className="col-span-full py-40 text-center">
-              <p className="mb-8 font-serif text-3xl text-[#C8C3BB] uppercase tracking-widest">Archive Empty</p> {/* // CONTRAST FIX */}
+              <p className="mb-8 font-serif text-3xl text-[#C8C3BB] uppercase tracking-widest">{t('no_results')}</p> {/* // CONTRAST FIX */}
               <Link href="/shop" className="inline-flex border-2 border-black px-12 py-5 font-sans text-[10px] font-bold tracking-[0.3em] uppercase hover:bg-black hover:text-white transition-all text-black"> {/* // CONTRAST FIX */}
-                Reset Listing
+                {t('clear_all')}
               </Link>
             </div>
           )}

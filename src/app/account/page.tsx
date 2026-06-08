@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 import {
   PackageIcon,
@@ -26,6 +27,7 @@ import { fetchAPI } from '@/lib/api';
 import { Order } from '@/lib/types';
 
 export default function DashboardPage() {
+  const t = useTranslations('account');
   const { user, wishlist } = useAuth();
   const [addressCount, setAddressCount] = useState(0);
   const [ordersCount, setOrdersCount] = useState(0);
@@ -65,9 +67,9 @@ export default function DashboardPage() {
   }, [user]);
 
   const STATS = [
-    { label: 'Total Orders', value: ordersCount, color: 'text-[#D33740]', icon: <PackageIcon /> },
-    { label: 'Wishlist Items', value: wishlist.length, color: 'text-[#C5AB7D]', icon: <HeartIcon /> },
-    { label: 'Saved Addresses', value: addressCount, color: 'text-black/30', icon: <MapPinIcon /> },
+    { label: t('orders'), value: ordersCount, color: 'text-[#D33740]', icon: <PackageIcon /> },
+    { label: t('wishlist'), value: wishlist.length, color: 'text-[#C5AB7D]', icon: <HeartIcon /> },
+    { label: t('addresses'), value: addressCount, color: 'text-black/30', icon: <MapPinIcon /> },
   ];
   return (
     <div className="space-y-8">
@@ -83,7 +85,7 @@ export default function DashboardPage() {
           />
         </div>
         <div className="relative z-10">
-          <p className="mb-3 text-[10px] font-bold tracking-[0.4em] text-[#C5AB7D] uppercase">Welcome Back</p>
+          <p className="mb-3 text-[10px] font-bold tracking-[0.4em] text-[#C5AB7D] uppercase">{t('welcome')}</p>
           <h1 className="mb-4 font-serif text-3xl text-white lg:text-5xl">{user?.firstName ? `${user.firstName} ${user.lastName || ''}` : user?.username || 'Guest'}</h1>
           <p className="max-w-md text-[14px] leading-relaxed text-white/50">
             Manage your curated collections, track your heritage artifacts, and update your personal profile.
@@ -109,7 +111,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between border-b border-black/5 px-8 py-5">
           <div className="flex items-center gap-3">
             <div className="text-[#C5AB7D]"><ClockIcon /></div>
-            <h2 className="font-serif text-lg text-black">Recent Orders</h2>
+            <h2 className="font-serif text-lg text-black">{t('orders')}</h2>
           </div>
           <Link href="/account/orders" className="flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] text-[#D33740] uppercase hover:text-black transition-colors">
             View All <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
@@ -118,7 +120,7 @@ export default function DashboardPage() {
         
         {recentOrders.length === 0 ? (
           <div className="px-8 py-16 text-center">
-            <p className="text-[14px] text-black/30 font-medium italic">You haven't placed any orders yet.</p>
+            <p className="text-[14px] text-black/30 font-medium italic">{t('no_orders')}</p>
           </div>
         ) : (
           <div className="divide-y divide-black/5">
@@ -135,7 +137,7 @@ export default function DashboardPage() {
               return (
                 <div key={order.documentId || order.id} className="flex items-center justify-between px-8 py-6 hover:bg-[#FAF7F2] transition-colors">
                   <div>
-                    <p className="font-serif text-lg text-black mb-1">Order #{order.attributes?.orderId || order.orderId}</p>
+                    <p className="font-serif text-lg text-black mb-1">{t('order_id')} #{order.attributes?.orderId || order.orderId}</p>
                     <p className="text-[12px] text-black/40">{new Date(order.attributes?.createdAt || order.createdAt).toLocaleDateString()}</p>
                   </div>
                   <div className="text-right">

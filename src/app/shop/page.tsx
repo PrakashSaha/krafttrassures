@@ -5,6 +5,7 @@ import ProductListing from '@/components/ProductListing';
 import Pagination from '@/components/Pagination';
 import { Product } from '@/lib/types';
 import { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<{ category?: string }> }): Promise<Metadata> {
   const resolvedParams = await searchParams;
@@ -25,8 +26,10 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
 }
 
 export default async function ShopPage({
+  params,
   searchParams,
 }: {
+  params: Promise<any>;
   searchParams: Promise<{ 
     category?: string; 
     q?: string; 
@@ -39,6 +42,9 @@ export default async function ShopPage({
   }>;
 }) {
   const resolvedParams = await searchParams;
+  
+  const t = await getTranslations('shop');
+  
   const currentCategory = resolvedParams?.category || '';
   const searchQuery = resolvedParams?.q || '';
   const currentSort = resolvedParams?.sort || 'newest';
@@ -79,9 +85,9 @@ export default async function ShopPage({
       <section className="mx-auto max-w-[1440px] px-6 pt-16 pb-12 text-center lg:px-12 lg:pt-24">
         <div className="max-w-5xl mx-auto">
           <p className="mb-4 font-sans text-[10px] font-bold tracking-[0.4em] text-[#C5AB7D] uppercase">Curated Shop</p>
-          <h1 className="font-serif text-[34px] md:text-5xl lg:text-6xl text-black leading-[1.05] tracking-tight mb-4">Shop the Living Craft Archive</h1>
+          <h1 className="font-serif text-[34px] md:text-5xl lg:text-6xl text-black leading-[1.05] tracking-tight mb-4">{t('title')}</h1>
           <p className="mx-auto mt-6 max-w-lg font-sans text-[12px] md:text-[14px] lg:text-[15px] leading-relaxed text-black/75">
-            Browse handcrafted pieces from Kraft Treasure in a clean product-first catalog shaped by the same visual language as the homepage.
+            {t('subtitle')}
           </p>
         </div>
       </section>

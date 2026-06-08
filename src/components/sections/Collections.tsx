@@ -3,10 +3,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 import { Category } from '@/lib/types';
 
 export default function Collections({ categories }: { categories?: Category[] }) {
+  const t = useTranslations('sections');
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
 
@@ -32,7 +34,7 @@ export default function Collections({ categories }: { categories?: Category[] })
       <div className={`mb-10 transition-all duration-1000 lg:mb-14 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
         <div className="grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-12">
           <div>
-            <span className="font-sans text-[10px] tracking-[0.35em] text-[#B8894A] uppercase block mb-5">Curated Collections</span>
+            <span className="font-sans text-[10px] tracking-[0.35em] text-[#B8894A] uppercase block mb-5">{t('collections_subtitle')}</span>
             <h2 className="font-serif text-[42px] leading-[0.98] text-black sm:text-5xl lg:text-[64px]">
               The Heart of <br /> Our Heritage
             </h2>
@@ -65,7 +67,7 @@ export default function Collections({ categories }: { categories?: Category[] })
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-zinc-200">
-                  <span className="font-sans text-xs text-black/20">No Image</span>
+                  <span className="font-sans text-xs text-black/20">{t('collections_no_image')}</span>
                 </div>
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-80" />
@@ -75,7 +77,7 @@ export default function Collections({ categories }: { categories?: Category[] })
                   <p className="mb-4 line-clamp-2 font-sans text-xs leading-relaxed text-white/90 transition-transform duration-500 group-hover:-translate-y-1 lg:text-sm">{item.description}</p>
                 )}
                 <div className="flex items-center gap-2 text-white">
-                  <span className="font-sans text-[10px] tracking-[0.2em] uppercase">Explore Category</span>
+                  <span className="font-sans text-[10px] tracking-[0.2em] uppercase">{t('collections_explore')}</span>
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-1"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </div>
               </div>

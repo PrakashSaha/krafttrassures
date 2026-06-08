@@ -8,13 +8,16 @@ import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { Product } from '@/lib/types';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 interface ProductCardProps {
   product: Product & { delay?: string };
   isVisible?: boolean;
+  priority?: boolean;
 }
 
-export const ProductCard = memo(({ product, isVisible = true }: ProductCardProps) => {
+export const ProductCard = memo(({ product, isVisible = true, priority = false }: ProductCardProps) => {
+  const t = useTranslations('shop');
   const { user, toggleWishlist, isInWishlist } = useAuth();
   const router = useRouter();
 
@@ -71,6 +74,8 @@ export const ProductCard = memo(({ product, isVisible = true }: ProductCardProps
           src={defaultImage}
           alt={product.name}
           fill
+          priority={priority}
+          loading={priority ? "eager" : "lazy"}
           sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
           className="absolute inset-0 object-cover transition-opacity duration-700 group-hover:opacity-0"
         />
@@ -100,7 +105,7 @@ export const ProductCard = memo(({ product, isVisible = true }: ProductCardProps
           </div>
           <div className="absolute inset-x-4 bottom-4 translate-y-4 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
             <div className="bg-white py-3 text-center text-[10px] font-bold tracking-[0.2em] text-black uppercase hover:bg-black hover:text-white transition-colors">
-              View Details
+              {t('view_details')}
             </div>
           </div>
         </div>
@@ -120,3 +125,5 @@ export const ProductCard = memo(({ product, isVisible = true }: ProductCardProps
 });
 
 export default ProductCard;
+
+ProductCard.displayName = 'ProductCard';

@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 interface AdornmentItem {
   title: string;
@@ -15,6 +16,7 @@ interface AdornmentsProps {
 }
 
 export default function Adornments({ items }: AdornmentsProps) {
+  const t = useTranslations('sections');
   // Limit to max 5 items
   const displayItems = items?.slice(0, 5) || [];
   
@@ -23,8 +25,8 @@ export default function Adornments({ items }: AdornmentsProps) {
   return (
     <section className="mx-auto w-full max-w-[1440px] px-6 py-24 lg:px-16">
       <div className="mb-16 text-center lg:text-left">
-        <p className="mb-4 text-[11px] font-medium tracking-[0.5em] text-[#C5AB7D] uppercase">Heritage Collection</p>
-        <h2 className="font-serif text-5xl text-zinc-900 lg:text-6xl tracking-tight">Curated Adornments</h2>
+        <p className="mb-4 text-[11px] font-medium tracking-[0.5em] text-[#C5AB7D] uppercase">{t('adornments_subtitle')}</p>
+        <h2 className="font-serif text-5xl text-zinc-900 lg:text-6xl tracking-tight">{t('adornments_title')}</h2>
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 h-auto lg:h-[850px]">
@@ -42,6 +44,7 @@ export default function Adornments({ items }: AdornmentsProps) {
 }
 
 function AdornmentCard({ title, subtitle, priceText, image, href, index, total }: AdornmentItem & { index: number; total: number }) {
+  const t = useTranslations('sections');
   // Refined Bento Grid Span Logic for Cleanliness (Referencing Image 2)
   let spanClasses = "";
   
@@ -96,7 +99,7 @@ function AdornmentCard({ title, subtitle, priceText, image, href, index, total }
             </p>
             
             <div className="inline-flex items-center gap-3 text-white/90 font-sans text-[10px] tracking-[0.3em] uppercase">
-              <span className="border-b border-white/30 pb-1 group-hover:border-[#C5AB7D] transition-colors">Explore Collection</span>
+              <span className="border-b border-white/30 pb-1 group-hover:border-[#C5AB7D] transition-colors">{t('adornments_explore')}</span>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
             </div>
         </div>

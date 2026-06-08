@@ -49,3 +49,11 @@ FORGOT_PASSWORD_SETUP.md
 implementation_plan.md
 walkthrough.md
 production_cleanup.md
+
+# Pre-push Security Additions
+.env.production
+**/backend/.env
+*.key
+*.p12
+*.pfx
+secrets/

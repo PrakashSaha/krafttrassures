@@ -67,7 +67,7 @@ export default function AccountWishlistPage() {
                         </h3>
                       </Link>
                       <p className="mb-1 text-[10px] font-bold tracking-[0.2em] text-[#8C6E3F] uppercase">{item.category}</p> {/* // CONTRAST FIX */}
-                      <p className="font-serif text-[15px] text-black">₹{item.price.toLocaleString('en-IN')}</p>
+                      <p className="font-serif text-[15px] text-black">₹<span className="notranslate">{item.price.toLocaleString('en-IN')}</span></p>
                     </div>
                     <div className="flex items-center gap-6 mt-4">
                       <button 

@@ -1,7 +1,8 @@
+import TranslateFix from '@/components/TranslateFix';
 import './tailwind.css';
 import './globals.css';
 import React from 'react';
-import { Inter, Playfair_Display } from 'next/font/google';
+import { Inter, Playfair_Display, Noto_Sans_Arabic } from 'next/font/google';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { AuthProvider } from '@/context/AuthContext';
@@ -10,6 +11,8 @@ import { Metadata } from 'next';
 import { getCategories } from '@/lib/strapi';
 import { Toaster } from 'sonner';
 import OnboardingModal from '@/components/OnboardingModal';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages, setRequestLocale } from 'next-intl/server';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -19,6 +22,11 @@ const inter = Inter({
 const playfair = Playfair_Display({
   subsets: ['latin'],
   variable: '--font-playfair',
+});
+
+const arabicFont = Noto_Sans_Arabic({
+  subsets: ['arabic'],
+  variable: '--font-arabic',
 });
 
 export const metadata: Metadata = {
@@ -42,20 +50,40 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const locale: string = 'en';
   const categories = await getCategories();
+  const messages = await getMessages();
+
+  const isRtl = locale === 'ar';
+  const direction = isRtl ? 'rtl' : 'ltr';
+  const bodyClass = isRtl ? arabicFont.className : playfair.className;
 
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable}`} data-scroll-behavior="smooth">
-      <body className={playfair.className} suppressHydrationWarning>
-        <Toaster position="bottom-right" richColors />
-        <AuthProvider>
-          <CartProvider>
-            <Header initialCategories={categories} />
-            <OnboardingModal />
-            {children}
-            <Footer />
-          </CartProvider>
-        </AuthProvider>
+    <html lang={locale} dir={direction} className={`${inter.variable} ${playfair.variable} ${arabicFont.variable}`} data-scroll-behavior="smooth">
+      <body className={bodyClass} suppressHydrationWarning>
+        <TranslateFix />
+        {/* Google Translate Hidden Widget */}
+        <div id="google_translate_element" style={{ position: 'absolute', opacity: 0, width: 0, height: 0, overflow: 'hidden' }}></div>
+        <script type="text/javascript" dangerouslySetInnerHTML={{
+          __html: `
+            function googleTranslateElementInit() {
+              new google.translate.TranslateElement({pageLanguage: 'en', includedLanguages: 'en,es,fr,de,ar', autoDisplay: false}, 'google_translate_element');
+            }
+          `
+        }}></script>
+        <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async defer></script>
+
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <Toaster position="bottom-right" richColors />
+          <AuthProvider>
+            <CartProvider>
+              <Header initialCategories={categories} />
+              <OnboardingModal />
+              {children}
+              <Footer />
+            </CartProvider>
+          </AuthProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

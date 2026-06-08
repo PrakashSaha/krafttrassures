@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 import { getStrapiMedia } from '@/lib/strapi';
+import { useTranslations } from 'next-intl';
 import { Product } from '@/lib/types';
 
 interface HeroSlide {
@@ -16,6 +17,7 @@ interface HeroSlide {
 }
 
 export default function Hero({ slides }: { slides?: HeroSlide[] }) {
+  const t = useTranslations('sections');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -63,7 +65,7 @@ export default function Hero({ slides }: { slides?: HeroSlide[] }) {
               {activeSlide.title.includes('Artistry') ? (
                 <>
                   {activeSlide.title.split('Artistry')[0]}
-                  <span className="text-[#8C6E3F] italic">Artistry</span> {/* // CONTRAST FIX */}
+                  <span className="text-[#8C6E3F] italic">{t('hero_artistry')}</span> {/* // CONTRAST FIX */}
                   {activeSlide.title.split('Artistry')[1]}
                 </>
               ) : activeSlide.title}
@@ -111,14 +113,14 @@ export default function Hero({ slides }: { slides?: HeroSlide[] }) {
                       <Image 
                         src="/images/placeholder.png" 
                         alt="Kraft Treasure" 
-                        fill 
+                        fill sizes="(max-width: 768px) 100vw, 50vw" 
                         className="object-cover opacity-30 grayscale"
                       />
                       <span className="relative z-10 font-serif text-[#C8C3BB] text-4xl">Kraft Treasure</span>
                     </div>
                   )}
                   <div className="absolute inset-0 z-20 flex flex-col justify-end bg-gradient-to-t from-black/80 via-transparent p-8">
-                    <p className="mb-2 font-sans text-[10px] tracking-[0.3em] text-white/60 uppercase">Featured Piece</p>
+                    <p className="mb-2 font-sans text-[10px] tracking-[0.3em] text-white/60 uppercase">{t('hero_featured')}</p>
                     <h3 className="font-serif text-xl text-white lg:text-2xl">{product.name}</h3>
                   </div>
                 </Link>

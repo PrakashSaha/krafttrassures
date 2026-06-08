@@ -100,17 +100,6 @@ export async function POST(request: Request) {
     `;
 
     if (notificationProvider === 'console') {
-      console.log('==================================================');
-      console.log('✉️  [FRONTEND EMAIL CONSOLE PROVIDER]');
-      console.log('--------------------------------------------------');
-      console.log(`FROM: ${sender}`);
-      console.log(`TO (Team): ${recipient}`);
-      console.log(`SUBJECT: New Heritage Enquiry: ${name}`);
-      console.log(`MESSAGE:\n"${message}"`);
-      console.log('--------------------------------------------------');
-      console.log(`TO (Customer): ${email}`);
-      console.log(`SUBJECT: We've Received Your Enquiry - Kraft Treasure`);
-      console.log('==================================================');
 
       return NextResponse.json({ message: 'Enquiry recorded in console log successfully' }, { status: 200 });
     }
