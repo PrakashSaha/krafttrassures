@@ -1,4 +1,7 @@
-/* eslint-disable react-hooks/set-state-in-effect */\n/* eslint-disable react-hooks/immutability */\n// Disabled specific rules as refactoring could cause regressions or false positives\n'use client';
+/* eslint-disable react-hooks/set-state-in-effect */
+/* eslint-disable react-hooks/immutability */
+// Disabled specific rules as refactoring could cause regressions or false positives
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';

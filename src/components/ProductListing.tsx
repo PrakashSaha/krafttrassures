@@ -1,4 +1,5 @@
-/* eslint-disable react-hooks/set-state-in-effect */ // Disabled as refactoring these specific effects could cause regressions\n'use client';
+/* eslint-disable react-hooks/set-state-in-effect */ // Disabled as refactoring these specific effects could cause regressions
+'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import ProductCard from './ProductCard';
