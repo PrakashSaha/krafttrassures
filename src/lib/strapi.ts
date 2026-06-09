@@ -304,6 +304,8 @@ export const getProductById = cache(async (productId: string): Promise<Product |
   const response = await fetchStrapi('products', {
     'filters[documentId][$eq]': productId,
     populate: ['image', 'thumbnail', 'categories'],
+  }, {
+    next: { revalidate: 0 }
   });
   
   if (!response?.data || response.data.length === 0) return null;

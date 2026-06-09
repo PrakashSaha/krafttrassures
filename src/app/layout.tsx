@@ -13,6 +13,7 @@ import { Toaster } from 'sonner';
 import OnboardingModal from '@/components/OnboardingModal';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
+import Script from 'next/script';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -59,19 +60,19 @@ export default async function RootLayout({
   const bodyClass = isRtl ? arabicFont.className : playfair.className;
 
   return (
-    <html lang={locale} dir={direction} className={`${inter.variable} ${playfair.variable} ${arabicFont.variable}`} data-scroll-behavior="smooth">
+    <html lang={locale} dir={direction} className={`${inter.variable} ${playfair.variable} ${arabicFont.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className={bodyClass} suppressHydrationWarning>
         <TranslateFix />
         {/* Google Translate Hidden Widget */}
-        <div id="google_translate_element" style={{ position: 'absolute', opacity: 0, width: 0, height: 0, overflow: 'hidden' }}></div>
-        <script type="text/javascript" dangerouslySetInnerHTML={{
-          __html: `
+        <div id="google_translate_element" suppressHydrationWarning style={{ position: 'absolute', opacity: 0, width: 0, height: 0, overflow: 'hidden' }}></div>
+        <Script id="google-translate-init" strategy="beforeInteractive">
+          {`
             function googleTranslateElementInit() {
               new google.translate.TranslateElement({pageLanguage: 'en', includedLanguages: 'en,es,fr,de,ar', autoDisplay: false}, 'google_translate_element');
             }
-          `
-        }}></script>
-        <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async defer></script>
+          `}
+        </Script>
+        <Script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" strategy="afterInteractive" />
 
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Toaster position="bottom-right" richColors />
