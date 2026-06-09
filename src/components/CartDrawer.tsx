@@ -107,7 +107,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     <div>
                       <p className="mb-0.5 text-[9px] font-semibold tracking-[0.2em] text-[#8C6E3F] uppercase">{item.category}</p> {/* // CONTRAST FIX */}
                       <h3 className="mb-1 line-clamp-1 font-serif text-[14px] text-black uppercase tracking-tight">{item.name}</h3>
-                      <p className="text-[12px] font-bold text-[#B8860B]">₹ {<span className="text-[18px] font-bold text-[#B8860B]">{item.price.toLocaleString('en-IN')}</span>}</p>
+                      <p className="text-[12px] font-bold text-[#B8860B]">₹ <span className="notranslate"><span className="text-[18px] font-bold text-[#B8860B]">{item.price.toLocaleString('en-IN')}</span></span></p>
                     </div>
                     
                     <div className="flex items-center justify-between">
@@ -120,7 +120,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/></svg>
                         </button>
                         <span className="flex h-7 w-8 items-center justify-center text-[11px] font-bold text-black border-x border-[#C8C3BB]"> {/* // CONTRAST FIX */}
-                          {item.qty || 1}
+                          <span className="notranslate">{item.qty || 1}</span>
                         </span>
                         <button 
                           onClick={() => updateQty(item.id, (item.qty || 1) + 1)}
@@ -152,7 +152,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             <span className="text-[10px] font-semibold tracking-[0.25em] text-black uppercase">Subtotal</span>
             <span className="font-serif font-bold text-[#B8860B]">
               <span className="text-[16px]">₹</span>
-              <span className="text-[18px] ml-1">{cartTotal.toLocaleString('en-IN')}</span>
+              <span className="text-[18px] ml-1"><span className="notranslate">{cartTotal.toLocaleString('en-IN')}</span></span>
             </span>
           </div>
           <button 

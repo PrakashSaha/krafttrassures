@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 interface ContactFormData {
   name: string;
@@ -17,6 +18,7 @@ export default function ContactPage() {
   });
   const [status, setStatus] = useState({ type: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const t = useTranslations('contact');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -60,8 +62,8 @@ export default function ContactPage() {
         {/* Page Header */}
         <div className="mb-12 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-1000">
-            <p className="mb-4 text-[10px] tracking-[0.3em] text-[#C5AB7D] uppercase">Get In Touch</p>
-            <h1 className="font-serif text-[48px] leading-tight text-black md:text-[58px]">Contact Us</h1>
+            <p className="mb-4 text-[10px] tracking-[0.3em] text-[#C5AB7D] uppercase">{t('hero_subtitle')}</p>
+            <h1 className="font-serif text-[48px] leading-tight text-black md:text-[58px]">{t('hero_title')}</h1>
           </div>
           <p className="max-w-[460px] text-[15px] leading-relaxed text-black/50 lg:text-right animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200">
             For product questions, order assistance, or curated buying enquiries, reach out directly and the Kraft Treasure team will get back to you.
@@ -99,28 +101,28 @@ export default function ContactPage() {
             <div className="flex-1 border border-black/5 bg-[#FAF7F2] p-8 lg:p-10">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <FormField 
-                  label="Name" 
+                  label={t('name')} 
                   name="name" 
                   value={formData.name} 
                   onChange={handleChange} 
-                  placeholder="Your Name" 
+                  placeholder={t('form_name')} 
                   required 
                 />
                 <FormField 
-                  label="Email" 
+                  label={t('email')} 
                   name="email" 
                   type="email" 
                   value={formData.email} 
                   onChange={handleChange} 
-                  placeholder="your@email.com" 
+                  placeholder={t('form_email')} 
                   required 
                 />
                 <FormField 
-                  label="Message" 
+                  label={t('message')} 
                   name="message" 
                   value={formData.message} 
                   onChange={handleChange} 
-                  placeholder="How can we help?" 
+                  placeholder={t('form_message')} 
                   textarea 
                   required 
                 />
@@ -130,7 +132,7 @@ export default function ContactPage() {
                   disabled={isSubmitting}
                   className="w-full bg-black py-5 text-[11px] font-bold tracking-[0.3em] text-white uppercase transition-all hover:bg-[#D33740] disabled:bg-gray-400 active:scale-[0.98]"
                 >
-                  {isSubmitting ? 'Sending...' : 'Send Message'}
+                  {isSubmitting ? 'Sending...' : t('btn_submit')}
                 </button>
               </form>
             </div>

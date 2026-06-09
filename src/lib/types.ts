@@ -15,6 +15,9 @@ export interface Product {
   availability?: string;
   description?: string;
   fullDescription?: string;
+  cosmic_story?: string;
+  ancient_utility?: string;
+  modern_utility?: string;
   thumbnails?: string[];
   stock?: number;
 }

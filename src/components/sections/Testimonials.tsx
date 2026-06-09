@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 
 interface Review {
   id: number | string;
@@ -10,6 +11,7 @@ interface Review {
 }
 
 export default function Testimonials({ reviews }: { reviews?: Review[] }) {
+  const t = useTranslations('sections');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(3);
 
@@ -43,8 +45,8 @@ export default function Testimonials({ reviews }: { reviews?: Review[] }) {
   return (
     <section className="mx-auto w-full max-w-[1440px] overflow-hidden px-6 pt-6 pb-20 lg:px-12">
       <div className="mb-10 text-center animate-in fade-in slide-in-from-bottom-4 duration-1000">
-        <p className="mb-3 font-sans text-[10px] tracking-[0.4em] text-[#C5AB7D] uppercase md:text-xs">Voices of Appreciation</p>
-        <h2 className="font-serif text-3xl text-black md:text-4xl">What Our Connoisseurs Say</h2>
+        <p className="mb-3 font-sans text-[10px] tracking-[0.4em] text-[#C5AB7D] uppercase md:text-xs">{t('testimonials_subtitle')}</p>
+        <h2 className="font-serif text-3xl text-black md:text-4xl">{t('testimonials_title')}</h2>
       </div>
 
       <div className="group/carousel relative">
@@ -62,7 +64,7 @@ export default function Testimonials({ reviews }: { reviews?: Review[] }) {
                       {[...Array(t.rating || 5)].map((_, i) => <StarIcon key={i} />)}
                     </div>
                     <p className="mb-8 flex-1 font-serif text-lg leading-relaxed text-black italic md:text-xl">
-                      "{t.content}"
+                      &quot;{t.content}&quot;
                     </p>
                     <div className="mt-auto">
                       <p className="font-sans text-[11px] font-bold tracking-[0.2em] text-[#C5AB7D] uppercase">

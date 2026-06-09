@@ -3,9 +3,11 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { ProductCard } from '../ProductCard';
+import { useTranslations } from 'next-intl';
 import { Product } from '@/lib/types';
 
 export default function NewArrivals({ products }: { products?: Product[] }) {
+  const t = useTranslations('sections');
   const [isVisible, setIsVisible] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(4);
@@ -53,8 +55,8 @@ export default function NewArrivals({ products }: { products?: Product[] }) {
       <div className="mx-auto w-full max-w-[1440px] px-6 lg:px-20">
         <div className={`mb-8 flex flex-col justify-between gap-6 transition-all duration-1000 lg:mb-12 lg:flex-row lg:items-end ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
           <div>
-            <p className="mb-4 font-sans text-xs tracking-[0.4em] text-[#C5AB7D] uppercase">Freshly Curated</p>
-            <h2 className="font-serif text-3xl leading-tight text-black md:text-5xl lg:text-6xl">New Arrivals</h2>
+            <p className="mb-4 font-sans text-xs tracking-[0.4em] text-[#C5AB7D] uppercase">{t('new_arrivals_subtitle')}</p>
+            <h2 className="font-serif text-3xl leading-tight text-black md:text-5xl lg:text-6xl">{t('new_arrivals_title')}</h2>
           </div>
           <Link 
             href="/shop" 
@@ -71,9 +73,9 @@ export default function NewArrivals({ products }: { products?: Product[] }) {
               className="-ml-6 flex transition-transform duration-500 ease-out lg:-ml-8"
               style={{ transform: `translateX(-${currentIndex * (100 / visibleCount)}%)` }}
             >
-              {displayProducts.map((product) => (
+              {displayProducts.map((product, index) => (
                 <div key={product.id} className="min-w-0 flex-[0_0_100%] pl-6 sm:flex-[0_0_50%] lg:flex-[0_0_33.33%] xl:flex-[0_0_25%] lg:pl-8">
-                  <ProductCard product={product} isVisible={isVisible} />
+                  <ProductCard product={product} isVisible={isVisible} priority={index < 4} />
                 </div>
               ))}
             </div>

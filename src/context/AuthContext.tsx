@@ -110,7 +110,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               let documentId = freshData.documentId || localUser.documentId;
               let numericId = freshData.id || localUser.id || freshData.userId;
               
-              console.log('[DEBUG] startup /users/me response:', { freshData, documentId, numericId });
 
               // If documentId still missing or looks like an ID, it might be nested or we need another strategy
               if (!documentId || documentId === String(numericId) || /^\d+$/.test(String(documentId))) {
@@ -171,7 +170,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             token: userData.jwt || rawUser.jwt,
             params: { fields: 'id,documentId,username,email' }
           });
-          console.log('[DEBUG] /users/me response:', me);
           documentId = me.documentId || me.id;
         } catch (e) {
           console.error('Failed to fetch /users/me for documentId', e);
@@ -187,7 +185,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         jwt: userData.jwt || rawUser.jwt
       };
       
-      console.log('[LOGIN] normalizedUser', normalizedUser);
       
       setUser(normalizedUser);
       localStorage.setItem('kt_user', JSON.stringify(normalizedUser));

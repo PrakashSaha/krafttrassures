@@ -2,8 +2,11 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getProducts, getStorySteps } from '@/lib/strapi';
+import { getTranslations } from 'next-intl/server';
 
-export default async function OurStory() {
+export default async function OurStory({ params }: { params: Promise<any> }) {
+  
+  const t = await getTranslations('story');
   const [featuredProducts, storySteps] = await Promise.all([
     getProducts({ 'pagination[pageSize]': 3 }),
     getStorySteps()
@@ -18,21 +21,19 @@ export default async function OurStory() {
             {/* LEFT: Text */}
             <div className="z-10 flex-1 pt-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
               <p className="mb-4 font-sans text-[10px] tracking-[0.4em] text-[#C5AB7D] uppercase">
-                Our Story
+                {t('subtitle')}
               </p>
               <h1 className="mb-8 font-serif text-4xl leading-tight text-black md:text-5xl lg:text-6xl">
-                A Living Archive <br />
-                Of Mountain Craft.
+                {t('title')}
               </h1>
               <p className="mb-10 max-w-sm font-sans text-sm leading-relaxed text-black/60">
-                Kraft Treasure brings the artistry of Arunachal Pradesh into contemporary collecting
-                while preserving the people, place, and cultural memory behind every piece.
+                {t('desc')}
               </p>
               <Link
                 href="/shop"
                 className="group relative inline-flex items-center justify-center gap-2 bg-[#D33740] px-10 py-5 font-sans text-[11px] font-bold tracking-[0.3em] text-white uppercase transition-all hover:bg-black hover:text-white active:scale-[0.98]"
               >
-                Collect The Pieces
+                {t('btn')}
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:translate-x-1"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </Link>
             </div>
@@ -95,7 +96,7 @@ export default async function OurStory() {
           <div className="mb-16 flex flex-col gap-16 lg:flex-row items-center">
             <div className="lg:w-[40%] animate-in fade-in slide-in-from-bottom-8 duration-1000">
               <p className="mb-6 text-[9px] font-bold tracking-[0.4em] text-[#C5AB7D] uppercase">Why We Began</p>
-              <h2 className="mb-8 font-serif text-4xl leading-tight md:text-5xl lg:text-6xl">Kraft Treasure Started With A Simple Refusal.</h2>
+              <h2 className="mb-8 font-serif text-4xl leading-tight md:text-5xl lg:text-6xl">{t('why_title')}</h2>
               <p className="font-sans text-[14px] leading-relaxed text-black/60">
                 We refused to let heritage objects from Arunachal Pradesh be treated as anonymous souvenirs. Extraordinary craft existed, but its stories were either missing or misrepresented.
               </p>
@@ -199,10 +200,10 @@ export default async function OurStory() {
           <div className="mx-auto max-w-[1440px] px-6 lg:px-12">
             <div className="grid gap-10 lg:grid-cols-[0.75fr_1.25fr] lg:gap-12">
               <div>
-                <p className="text-[10px] font-sans uppercase tracking-[0.35em] text-[#D33740]">What We Stand For</p>
+                <p className="text-[10px] font-sans uppercase tracking-[0.35em] text-[#D33740]">{t('commitments')}</p>
                 <h2 className="mt-4 text-4xl font-serif leading-tight text-black sm:text-5xl">Four Commitments Shape Every Decision On The Platform.</h2>
                 <p className="mt-5 max-w-md text-sm leading-7 text-black/65 md:text-base">
-                  These are not brand adjectives. They are operating rules that help us decide what belongs in the collection and how it should be presented.
+                  These are not brand adjectives. They are operating rules with value that help us decide what belongs in the collection and how it should be presented.
                 </p>
                 <div className="mt-8 border-l-2 border-[#D33740] pl-5">
                   <p className="text-[10px] font-sans uppercase tracking-[0.3em] text-black/45">Collector Promise</p>
@@ -315,7 +316,7 @@ export default async function OurStory() {
             </div>
             <div className="relative z-10 flex flex-col items-center justify-between gap-12 lg:flex-row">
               <div className="lg:max-w-2xl">
-                <p className="mb-6 text-[9px] font-bold tracking-[0.4em] text-[#C5AB7D] uppercase">Continue The Story</p>
+                <p className="mb-6 text-[9px] font-bold tracking-[0.4em] text-[#C5AB7D] uppercase">{t('continue')}</p>
                 <h2 className="mb-6 font-serif text-3xl leading-tight text-white md:text-4xl lg:text-5xl">Explore The Collection Or Discover Pieces Rooted In Heritage.</h2>
                 <p className="font-sans text-sm leading-relaxed text-white/50">
                   Whether you are building a personal collection or simply learning the language of fine traditions, we can guide the next step.

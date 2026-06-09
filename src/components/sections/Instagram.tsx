@@ -1,5 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 interface InstagramPost {
   id: number | string;
@@ -8,6 +9,7 @@ interface InstagramPost {
 }
 
 export default function Instagram({ posts }: { posts?: InstagramPost[] }) {
+  const t = useTranslations('sections');
   const displayPosts = posts && posts.length > 0 ? posts : [];
 
   return (
@@ -17,7 +19,7 @@ export default function Instagram({ posts }: { posts?: InstagramPost[] }) {
         <p className="mb-3 font-sans text-[10px] tracking-[0.4em] text-[#C5AB7D] uppercase md:text-xs">
           Behind the Scenes
         </p>
-        <h2 className="mb-8 font-serif text-3xl text-black md:text-4xl lg:text-5xl">Shared on Instagram</h2>
+        <h2 className="mb-8 font-serif text-3xl text-black md:text-4xl lg:text-5xl">{t('instagram_title')}</h2>
         <a
           href="https://www.instagram.com/"
           target="_blank"

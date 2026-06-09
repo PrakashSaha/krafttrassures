@@ -5,11 +5,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { authApi } from '@/services/authApi';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const t = useTranslations('auth');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,9 +42,9 @@ export default function ForgotPasswordPage() {
              <h1 className="font-serif text-2xl tracking-tighter text-black uppercase">Kraft Treasure</h1>
           </Link>
           <p className="mb-3 text-[10px] font-bold tracking-[0.4em] text-[#C5AB7D] uppercase">Security</p>
-          <h2 className="font-serif text-4xl text-black">Forgot Password?</h2>
+          <h2 className="font-serif text-4xl text-black">{t('forgot')}</h2>
           <p className="mt-4 text-[14px] leading-relaxed text-black/50">
-            Enter the email associated with your account and we'll send you an OTP to reset your password.
+            {t('reset_subtitle')}
           </p>
         </div>
 
@@ -51,7 +53,7 @@ export default function ForgotPasswordPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="mb-2 block text-[10px] font-bold tracking-[0.2em] text-[#595148] uppercase">
-                Email Address <span className="text-[#D33740]">*</span>
+                {t('email')} <span className="text-[#D33740]">*</span>
               </label>
               <input
                 type="email"
@@ -68,7 +70,7 @@ export default function ForgotPasswordPage() {
               disabled={loading}
               className="group flex w-full items-center justify-center gap-3 bg-[#D33740] py-5 font-sans text-[11px] font-bold tracking-[0.3em] text-white uppercase transition-all hover:bg-black active:scale-[0.98] disabled:opacity-50"
             >
-              {loading ? 'Sending OTP...' : 'Send OTP'}
+              {loading ? 'Sending OTP...' : t('send_link')}
             </button>
           </form>
 
@@ -77,7 +79,7 @@ export default function ForgotPasswordPage() {
               href="/login"
               className="text-[10px] font-bold tracking-[0.2em] text-black/40 uppercase hover:text-black transition-colors"
             >
-              Back to Login
+              {t('login_title')}
             </Link>
           </div>
         </div>

@@ -11,10 +11,11 @@ import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { getCategories } from '@/lib/strapi';
 import { Category } from '@/lib/types';
-
-
+import LanguageSwitcher from './LanguageSwitcher';
+import { useTranslations } from 'next-intl';
 
 export default function Header({ initialCategories = [] }: { initialCategories?: Category[] }) {
+  const t = useTranslations('nav');
   const { user, wishlist, logout, loading } = useAuth();
   const { cart, cartCount } = useCart();
   const router = useRouter();
@@ -98,7 +99,7 @@ export default function Header({ initialCategories = [] }: { initialCategories?:
               </Link>
               
               <div className="hidden items-center gap-4 lg:flex xl:gap-8">
-                <Link href="/" className="nav-link">Home</Link>
+                <Link href="/" className="nav-link">{t('home')}</Link>
                 
                 {/* Shop Mega Menu */}
                 <div className="group py-4">
@@ -162,13 +163,15 @@ export default function Header({ initialCategories = [] }: { initialCategories?:
                   </div>
                 </div>
 
-                <Link href="/our-story" className="nav-link">Our Story</Link>
-                <Link href="/contact" className="nav-link">Contact</Link>
+                <Link href="/our-story" className="nav-link">{t('about')}</Link>
+                <Link href="/contact" className="nav-link">{t('contact')}</Link>
               </div>
             </div>
 
             {/* Actions */}
             <div className="flex items-center gap-4 lg:gap-6">
+              <LanguageSwitcher />
+
               {/* Search */}
               <button onClick={() => setSearchOpen(true)} className="icon-btn" aria-label="Search">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.34-4.34"/></svg>

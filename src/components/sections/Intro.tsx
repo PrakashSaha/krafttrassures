@@ -9,7 +9,7 @@ export default function Intro() {
           <Image 
             src="/images/img_8dfabc30d59d4b172f1aec28f3d60aba.png" 
             alt="Arunachal Mask Background" 
-            fill
+            fill sizes="(max-width: 768px) 100vw, 50vw"
             className="object-contain"
           />
         </div>
@@ -17,7 +17,7 @@ export default function Intro() {
           <Image 
             src="/images/img_93892b41c09914ab339b71a95c773150.png" 
             alt="Arunachal Artifacts Background" 
-            fill
+            fill sizes="(max-width: 768px) 100vw, 50vw"
             className="object-contain"
           />
         </div>

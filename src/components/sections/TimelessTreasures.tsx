@@ -3,10 +3,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { ProductCard } from '../ProductCard';
+import { useTranslations } from 'next-intl';
 import { Product } from '@/lib/types';
 
 
 export default function TimelessTreasures({ products }: { products?: Product[] }) {
+  const t = useTranslations('sections');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleCount, setVisibleCount] = useState(5);
 
@@ -37,8 +39,8 @@ export default function TimelessTreasures({ products }: { products?: Product[] }
     <section className="mx-auto w-full max-w-[1440px] overflow-hidden px-6 pt-12 pb-20 lg:px-12">
       <div className="mx-auto mb-12 flex flex-col justify-between gap-8 md:flex-row md:items-end">
         <div className="text-left">
-          <p className="mb-3 font-sans text-[10px] tracking-[0.4em] text-[#C5AB7D] uppercase md:text-xs">Timeless Treasures</p>
-          <h2 className="font-serif text-3xl leading-tight text-black md:text-4xl lg:text-5xl">Heritage Decors For Lifetime</h2>
+          <p className="mb-3 font-sans text-[10px] tracking-[0.4em] text-[#C5AB7D] uppercase md:text-xs">{t('treasures_subtitle')}</p>
+          <h2 className="font-serif text-3xl leading-tight text-black md:text-4xl lg:text-5xl">{t('treasures_title')}</h2>
         </div>
         <Link href="/shop" className="btn-primary group">
           View Products

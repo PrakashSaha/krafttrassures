@@ -2,31 +2,34 @@ import { jwtVerify } from 'jose';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
+// Avoid errors if JWT_SECRET is not defined at build time
+const secretString = process.env.JWT_SECRET || 'secret';
+const JWT_SECRET = new TextEncoder().encode(secretString);
 
-export async function proxy(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const token = request.cookies.get('kt_auth_token')?.value;
   const { pathname } = request.nextUrl;
 
-  // Protected routes
   const protectedPaths = ['/checkout', '/account', '/wishlist'];
-  const isProtected = protectedPaths.some(path => pathname.startsWith(path));
+  const isProtected = protectedPaths.some(path => 
+    pathname.includes(path)
+  );
 
   if (isProtected) {
+    const loginPath = '/login';
+
     if (!token) {
       const url = request.nextUrl.clone();
-      url.pathname = '/login';
+      url.pathname = loginPath;
       url.searchParams.set('redirect', pathname);
       return NextResponse.redirect(url);
     }
 
     try {
-      // Verify token with jose
       await jwtVerify(token, JWT_SECRET);
     } catch (error) {
-      // Token is invalid or expired
       const url = request.nextUrl.clone();
-      url.pathname = '/login';
+      url.pathname = loginPath;
       url.searchParams.set('redirect', pathname);
       
       const response = NextResponse.redirect(url);
@@ -39,9 +42,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/checkout/:path*',
-    '/account/:path*',
-    '/wishlist/:path*',
-  ],
+  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)']
 };

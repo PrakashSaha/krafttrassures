@@ -8,8 +8,9 @@ const STRAPI_TOKEN = process.env.NEXT_PUBLIC_STRAPI_API_TOKEN?.trim();
 /**
  * Fetch Adornments (Homepage Featured Blocks)
  */
-export const getAdornments = cache(async () => {
+export const getAdornments = cache(async (locale?: string) => {
   const response = await fetchStrapi('adornments', {
+    locale,
     populate: ['image'] // Strapi v5 handles media population simply if top-level
   });
   if (!response?.data) return [];
@@ -193,8 +194,9 @@ const FALLBACK_CATEGORIES: Category[] = [
 /**
  * Fetch Hero Sliders
  */
-export const getHeroSliders = cache(async () => {
+export const getHeroSliders = cache(async (locale?: string) => {
   const response = await fetchStrapi('hero-sliders', { 
+    locale,
     // Explicit deep population for Strapi v5 relations
     populate: {
       products: {
@@ -302,6 +304,8 @@ export const getProductById = cache(async (productId: string): Promise<Product |
   const response = await fetchStrapi('products', {
     'filters[documentId][$eq]': productId,
     populate: ['image', 'thumbnail', 'categories'],
+  }, {
+    next: { revalidate: 0 }
   });
   
   if (!response?.data || response.data.length === 0) return null;
@@ -334,6 +338,9 @@ function mapProduct(item: any): Product {
     stock: data.quantity || 0,
     description: data.description || '',
     fullDescription: data.longDescription || '',
+    cosmic_story: data.cosmic_story || '',
+    ancient_utility: data.ancient_utility || '',
+    modern_utility: data.modern_utility || '',
     href: `/product/${data.documentId}`,
   };
 }
@@ -344,9 +351,9 @@ export const getProductBySlug = getProductById;
 /**
  * Fetch Categories
  */
-export const getCategories = cache(async (): Promise<Category[]> => {
+export const getCategories = cache(async (locale?: string): Promise<Category[]> => {
   try {
-    const response = await fetchStrapi('categories', { populate: 'image' });
+    const response = await fetchStrapi('categories', { locale, populate: 'image' });
     if (!response?.data) return FALLBACK_CATEGORIES;
 
     return response.data.map((item: any) => {
@@ -366,8 +373,8 @@ export const getCategories = cache(async (): Promise<Category[]> => {
 /**
  * Fetch Testimonials
  */
-export const getTestimonials = cache(async () => {
-  const response = await fetchStrapi('testimonials');
+export const getTestimonials = cache(async (locale?: string) => {
+  const response = await fetchStrapi('testimonials', { locale });
   if (!response?.data) return [];
 
   return response.data.map((item: any) => {
@@ -384,8 +391,8 @@ export const getTestimonials = cache(async () => {
 /**
  * Fetch Story Steps
  */
-export const getStorySteps = cache(async () => {
-  const response = await fetchStrapi('story-steps');
+export const getStorySteps = cache(async (locale?: string) => {
+  const response = await fetchStrapi('story-steps', { locale });
   if (!response?.data) return [];
 
   return response.data.map((item: any) => {
@@ -401,8 +408,9 @@ export const getStorySteps = cache(async () => {
 /**
  * Fetch Instagram Feed
  */
-export const getInstagramFeeds = cache(async () => {
+export const getInstagramFeeds = cache(async (locale?: string) => {
   const response = await fetchStrapi('instagram-feeds', { 
+    locale,
     populate: ['image'] 
   });
   if (!response?.data) return [];
@@ -417,4 +425,51 @@ export const getInstagramFeeds = cache(async () => {
   });
 });
 
+/**
+ * Fetch Articles with Locale
+ */
+export const getArticles = cache(async (locale?: string) => {
+  const response = await fetchStrapi('articles', { 
+    locale,
+    populate: ['coverImage']
+  });
+  if (!response?.data) return [];
 
+  return response.data.map((item: any) => {
+    const data = flattenAttributes(item);
+    return {
+      id: data.id,
+      documentId: data.documentId,
+      title: data.title,
+      slug: data.slug,
+      summary: data.summary,
+      content: data.content,
+      publishedAt: data.publishedAt,
+      coverImage: getStrapiMedia(data.coverImage),
+    };
+  });
+});
+
+/**
+ * Fetch Article By Slug with Locale
+ */
+export const getArticleBySlug = cache(async (slug: string, locale?: string) => {
+  const response = await fetchStrapi('articles', { 
+    locale,
+    'filters[slug][$eq]': slug,
+    populate: ['coverImage']
+  });
+  if (!response?.data || response.data.length === 0) return null;
+
+  const data = flattenAttributes(response.data[0]);
+  return {
+    id: data.id,
+    documentId: data.documentId,
+    title: data.title,
+    slug: data.slug,
+    summary: data.summary,
+    content: data.content,
+    publishedAt: data.publishedAt,
+    coverImage: getStrapiMedia(data.coverImage),
+  };
+});

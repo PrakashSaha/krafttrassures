@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 export default function LoginPage() {
   const { login, isAuthenticated, loading } = useAuth();
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const [showLoginPass, setShowLoginPass] = useState(false);
   const [showRegisterPass, setShowRegisterPass] = useState(false);
   const [showRegisterConfirmPass, setShowRegisterConfirmPass] = useState(false);
+  const t = useTranslations('auth');
 
   // Redirect if already logged in
   React.useEffect(() => {
@@ -150,7 +152,7 @@ export default function LoginPage() {
         {/* Page Header */}
         <div className="mb-12 text-center animate-in fade-in slide-in-from-bottom-4 duration-1000">
           <p className="mb-3 text-[10px] font-bold tracking-[0.4em] text-[#C5AB7D] uppercase">Account Access</p>
-          <h1 className="mb-4 font-serif text-4xl text-black lg:text-6xl">{isLoginView ? 'Welcome Back' : 'Create Account'}</h1>
+          <h1 className="mb-4 font-serif text-4xl text-black lg:text-6xl">{isLoginView ? t('login_subtitle') : t('register_subtitle')}</h1>
           <p className="mx-auto max-w-md text-[14px] leading-relaxed text-black/50">
             {isLoginView 
               ? 'Sign in to access your curated archive and manage your treasures.' 
@@ -164,13 +166,13 @@ export default function LoginPage() {
             onClick={() => setIsLoginView(true)}
             className={`flex-1 py-3 text-[10px] font-bold tracking-[0.2em] uppercase transition-all ${isLoginView ? 'bg-black text-white' : 'text-black/40 hover:text-black'}`}
           >
-            Sign In
+            {t('login_title')}
           </button>
           <button 
             onClick={() => setIsLoginView(false)}
             className={`flex-1 py-3 text-[10px] font-bold tracking-[0.2em] uppercase transition-all ${!isLoginView ? 'bg-[#D33740] text-white' : 'text-black/40 hover:text-black'}`}
           >
-            Register
+            {t('signup')}
           </button>
         </div>
 
@@ -190,25 +192,25 @@ export default function LoginPage() {
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold tracking-[0.3em] text-[#C5AB7D] uppercase">Sign In</p>
+                    <p className="text-[10px] font-bold tracking-[0.3em] text-[#C5AB7D] uppercase">{t('login_title')}</p>
                     <h2 className="font-serif text-2xl text-black">Member Login</h2>
                   </div>
                 </div>
 
                 <form className="space-y-6" onSubmit={handleLogin}>
                   {loginError && <div className="p-4 text-[12px] font-bold tracking-wider text-white bg-[#D33740] uppercase">{loginError}</div>}
-                  <AuthField label="Email" type="email" value={loginEmail} onChange={(e: any) => setLoginEmail(e.target.value)} placeholder="your@email.com" required />
+                  <AuthField label={t('email')} type="email" value={loginEmail} onChange={(e: any) => setLoginEmail(e.target.value)} placeholder="your@email.com" required />
                   <div className="relative">
-                    <AuthField label="Password" type={showLoginPass ? 'text' : 'password'} value={loginPassword} onChange={(e: any) => setLoginPassword(e.target.value)} placeholder="••••••••" required className="pr-12" />
+                    <AuthField label={t('password')} type={showLoginPass ? 'text' : 'password'} value={loginPassword} onChange={(e: any) => setLoginPassword(e.target.value)} placeholder="••••••••" required className="pr-12" />
                     <button type="button" onClick={() => setShowLoginPass(!showLoginPass)} className="absolute right-4 top-[38px] text-[#595148] hover:text-black transition-colors">
                       {showLoginPass ? <EyeOffIcon /> : <EyeIcon />}
                     </button>
                     <div className="mt-2 text-right">
-                      <Link href="/forgot-password" className="text-[10px] font-bold tracking-[0.1em] text-black/40 uppercase hover:text-[#D33740]">Forgot Password?</Link>
+                      <Link href="/forgot-password" className="text-[10px] font-bold tracking-[0.1em] text-black/40 uppercase hover:text-[#D33740]">{t('forgot')}</Link>
                     </div>
                   </div>
                   <button type="submit" disabled={loginLoading} className="btn-primary w-full mt-4 disabled:opacity-50">
-                    {loginLoading ? 'Signing In...' : 'Sign In'}
+                    {loginLoading ? 'Signing In...' : t('login_title')}
                   </button>
                 </form>
                 
@@ -217,7 +219,7 @@ export default function LoginPage() {
                     onClick={() => setIsLoginView(false)}
                     className="text-[10px] font-bold tracking-[0.2em] text-black/40 uppercase hover:text-[#D33740] transition-colors"
                   >
-                    Don't have an account? Create one
+                    {t('no_account')}
                   </button>
                 </div>
               </div>
@@ -230,19 +232,19 @@ export default function LoginPage() {
                   </div>
                   <div>
                     <p className="text-[10px] font-bold tracking-[0.3em] text-[#C5AB7D] uppercase">Join Us</p>
-                    <h2 className="font-serif text-2xl text-black">Create Account</h2>
+                    <h2 className="font-serif text-2xl text-black">{t('register_title')}</h2>
                   </div>
                 </div>
 
                 <form className="space-y-6" onSubmit={handleRegister}>
                   {regError && <div className="p-4 text-[12px] font-bold tracking-wider text-white bg-black uppercase">{regError}</div>}
                   
-                  <AuthField label="Email" type="email" value={regEmail} onChange={(e: any) => setRegEmail(e.target.value)} placeholder="your@email.com" required />
+                  <AuthField label={t('email')} type="email" value={regEmail} onChange={(e: any) => setRegEmail(e.target.value)} placeholder="your@email.com" required />
                   <AuthField label="Phone Number" type="tel" value={regPhone} onChange={(e: any) => setRegPhone(e.target.value)} placeholder="Phone Number" required />
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="relative">
-                      <AuthField label="Password" type={showRegisterPass ? 'text' : 'password'} value={regPassword} onChange={(e: any) => setRegPassword(e.target.value)} placeholder="••••••••" required className="pr-12" />
+                      <AuthField label={t('password')} type={showRegisterPass ? 'text' : 'password'} value={regPassword} onChange={(e: any) => setRegPassword(e.target.value)} placeholder="••••••••" required className="pr-12" />
                       <button type="button" onClick={() => setShowRegisterPass(!showRegisterPass)} className="absolute right-4 top-[38px] text-[#595148] hover:text-black transition-colors">
                         {showRegisterPass ? <EyeOffIcon /> : <EyeIcon />}
                       </button>
@@ -255,7 +257,7 @@ export default function LoginPage() {
                     </div>
                   </div>
                   <button type="submit" disabled={regLoading} className="btn-primary w-full mt-4 disabled:opacity-50">
-                    {regLoading ? 'Creating Profile...' : 'Register'}
+                    {regLoading ? 'Creating Profile...' : t('signup')}
                   </button>
                 </form>
 
@@ -264,7 +266,7 @@ export default function LoginPage() {
                     onClick={() => setIsLoginView(true)}
                     className="text-[10px] font-bold tracking-[0.2em] text-black/40 uppercase hover:text-black transition-colors"
                   >
-                    Already have an account? Sign In
+                    {t('have_account')}
                   </button>
                 </div>
               </div>

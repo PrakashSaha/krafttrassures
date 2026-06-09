@@ -198,3 +198,13 @@ html {
 .razorpay-container > iframe {
   min-height: 100% !important;
 }
+
+/* Hide Google Translate Banner */
+.goog-te-banner-frame { display: none !important; }
+body { top: 0px !important; }
+
+#goog-gt-tt, .goog-te-balloon-frame { display: none !important; }
+.goog-text-highlight { background-color: transparent !important; box-shadow: none !important; }
+
+iframe.skiptranslate, div.skiptranslate > iframe { display: none !important; }
+.VIpgJd-ZVi9od-ORHb-OEVmcd { display: none !important; }

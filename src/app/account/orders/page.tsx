@@ -81,7 +81,7 @@ export default function OrdersPage() {
                 <p className="font-serif text-black">{order.orderId}</p>
                 <p className="text-black/60">{new Date(order.createdAt).toLocaleDateString()}</p>
                 <p className="text-black/60">{order.items?.length || 0} items</p>
-                <p className="font-bold text-black">₹{order.totalAmount?.toLocaleString('en-IN')}</p>
+                <p className="font-bold text-black">₹<span className="notranslate">{order.totalAmount?.toLocaleString('en-IN')}</span></p>
                 <p className="text-[10px] font-bold uppercase tracking-wider text-[#C5AB7D]">{order.status}</p>
               </div>
             ))}
