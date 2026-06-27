@@ -23,6 +23,11 @@ const nextConfig = {
         hostname: 'dlvanktuohroejmhytng.storage.supabase.co',
         pathname: '/storage/v1/object/public/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'dlvanktuohroejmhytng.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
     ],
   },
   // Silence Turbopack workspace warning
