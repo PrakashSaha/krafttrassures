@@ -10,7 +10,7 @@ interface InstagramPost {
 
 export default function Instagram({ posts }: { posts?: InstagramPost[] }) {
   const t = useTranslations('sections');
-  const displayPosts = posts && posts.length > 0 ? posts : [];
+  const displayPosts = (posts && posts.length > 0 ? posts : []).filter((post) => post.image);
 
   return (
     <section className="mx-auto w-full max-w-[1440px] px-6 py-20 lg:px-12">
