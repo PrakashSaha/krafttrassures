@@ -28,6 +28,11 @@ const nextConfig = {
         hostname: 'dlvanktuohroejmhytng.supabase.co',
         pathname: '/storage/v1/object/public/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'inviting-paradise-0588b7235a.media.strapiapp.com',
+        pathname: '/**',
+      },
     ],
   },
   // Silence Turbopack workspace warning
