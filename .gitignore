@@ -57,3 +57,7 @@ production_cleanup.md
 *.p12
 *.pfx
 secrets/
+
+# Agent files
+.agents/
+skills-lock.json
