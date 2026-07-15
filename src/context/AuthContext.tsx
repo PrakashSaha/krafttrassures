@@ -96,6 +96,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const localUser = JSON.parse(storedUser);
         setUser(localUser);
+        setLoading(false);
 
         if (localUser.jwt) {
           try {
@@ -132,7 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               localStorage.setItem('kt_user', JSON.stringify(updatedUser));
               
               if (updatedUser.jwt && updatedUser.documentId) {
-                await fetchUserWishlist(updatedUser.jwt, updatedUser.documentId);
+                void fetchUserWishlist(updatedUser.jwt, updatedUser.documentId);
               }
             } else if (res.status === 401) {
               setUser(null);
@@ -162,19 +163,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const rawUser = (userData as any).data?.attributes || (userData as any).attributes || (userData as any).data || userData;
       
-      let documentId = rawUser.documentId || userData.documentId;
-      
-      if (!documentId && (userData.jwt || rawUser.jwt)) {
-        try {
-          const me = await fetchAPI('/users/me', {
-            token: userData.jwt || rawUser.jwt,
-            params: { fields: 'id,documentId,username,email' }
-          });
-          documentId = me.documentId || me.id;
-        } catch (e) {
-          console.error('Failed to fetch /users/me for documentId', e);
-        }
-      }
+      const documentId = rawUser.documentId || userData.documentId || rawUser.id || userData.id;
 
       const normalizedUser: User = {
         ...rawUser,
@@ -190,7 +179,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('kt_user', JSON.stringify(normalizedUser));
       
       if (normalizedUser.jwt && normalizedUser.documentId) {
-        await fetchUserWishlist(normalizedUser.jwt, normalizedUser.documentId);
+        void fetchUserWishlist(normalizedUser.jwt, normalizedUser.documentId);
         toast.success(`Welcome back, ${normalizedUser.firstName || normalizedUser.username}!`, {
           description: 'You have successfully signed in.',
         });

@@ -19,7 +19,7 @@ interface CartContextType {
   removeFromCart: (productId: string | number) => void;
   updateQty: (productId: string | number, qty: number) => void;
   clearCart: () => void;
-  checkout: (shippingAddress: any, customDetails?: { transactionId?: string; paymentStatus?: string }) => Promise<any>;
+  checkout: (shippingAddress: any, customDetails?: { transactionId?: string; paymentStatus?: string; shippingCharge?: number }) => Promise<any>;
   validateCartStock: () => Promise<{ hasIssue: boolean; issues: any[] }>;
 }
 
@@ -265,7 +265,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user, cart]);
 
   // Checkout E-commerce Flow (Creates Order -> Creates Order Items -> Clears Cart)
-  const checkout = useCallback(async (shippingAddress: any, customDetails?: { transactionId?: string; paymentStatus?: string }) => {
+  const checkout = useCallback(async (shippingAddress: any, customDetails?: { transactionId?: string; paymentStatus?: string; shippingCharge?: number }) => {
     if (!user?.jwt || !user?.id || cart.length === 0) {
       throw new Error('Cannot checkout: user not logged in or cart empty');
     }
@@ -277,7 +277,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         data: {
           orderId: `KT-${uniqueSuffix}`,
           transactionId: customDetails?.transactionId || `TXN-${uniqueSuffix}`,
-          totalAmount: cartTotal,
+          totalAmount: cartTotal + (customDetails?.shippingCharge || 0),
           paymentStatus: customDetails?.paymentStatus || 'Pending',
           shippingAddress: shippingAddress,
           owner: formatRelation(user.documentId),

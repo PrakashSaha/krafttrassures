@@ -22,6 +22,12 @@ export default function CheckoutPage() {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [shippingCharge, setShippingCharge] = useState(0);
+  const [shippingLoading, setShippingLoading] = useState(false);
+  const [estimatedDays, setEstimatedDays] = useState<number | null>(null);
+  const [shippingAvailable, setShippingAvailable] = useState(true);
+  const [shippingReason, setShippingReason] = useState<string | null>(null);
+
   const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'test'>('test');
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
   const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
@@ -84,6 +90,39 @@ export default function CheckoutPage() {
     loadAddresses();
   }, [user, cart.length, router]);
 
+  // Fetch shipping charge when address changes
+  useEffect(() => {
+    const selectedAddress = addresses.find(a => a.id === selectedAddressId);
+    if (!selectedAddress?.pin) {
+      setShippingCharge(0);
+      setEstimatedDays(null);
+      setShippingAvailable(true);
+      setShippingReason(null);
+      return;
+    }
+
+    const totalWeight = cart.reduce((sum, item) => sum + item.qty * 0.5, 0); // ponytail: 0.5kg default per item, no weight field on product yet
+    const controller = new AbortController();
+
+    setShippingLoading(true);
+    fetch(`/api/shipping?pincode=${selectedAddress.pin}&weight=${totalWeight}`, { signal: controller.signal })
+      .then(res => res.json())
+      .then(data => {
+        setShippingCharge(data.charge || 0);
+        setEstimatedDays(data.estimatedDays || null);
+        setShippingReason(data.reason || null);
+        setShippingAvailable(data.available !== false || data.reason === 'Shiprocket not configured');
+      })
+      .catch(err => {
+        if (err.name !== 'AbortError') console.error('Shipping fetch failed:', err);
+      })
+      .finally(() => setShippingLoading(false));
+
+    return () => controller.abort();
+  }, [selectedAddressId, addresses, cart]);
+
+  const grandTotal = Math.round(cartTotal * 1.18 + shippingCharge);
+
   const handlePlaceOrder = async () => {
     if (!selectedAddressId) {
       toast.error('Please select a shipping address');
@@ -119,7 +158,7 @@ export default function CheckoutPage() {
           return;
         }
 
-        const totalAmount = Math.round(cartTotal * 1.18);
+        const totalAmount = grandTotal;
 
         const options = {
           key: razorpayKey,
@@ -132,7 +171,8 @@ export default function CheckoutPage() {
               setProcessing(true);
               const order = await checkout(selectedAddress, {
                 transactionId: response.razorpay_payment_id,
-                paymentStatus: 'Paid'
+                paymentStatus: 'Paid',
+                shippingCharge,
               });
               
               if (order) {
@@ -163,7 +203,7 @@ export default function CheckoutPage() {
         const rzp = new (window as any).Razorpay(options);
         rzp.open();
       } else {
-        const order = await checkout(selectedAddress);
+        const order = await checkout(selectedAddress, { shippingCharge });
         if (order) {
           router.push(`/account/orders`);
         }
@@ -408,15 +448,36 @@ export default function CheckoutPage() {
                   <span className="text-[#3A3530]">{t('tax')}</span>
                   <span className="font-medium text-black">₹<span className="notranslate">{Math.round(cartTotal * 0.18).toLocaleString('en-IN')}</span></span>
                 </div>
-                <div className="flex justify-between text-[#3A3530]">
-                  <span>Shipping</span>
-                  <span className="bg-[#D6F0DD] text-[#1A6B30] rounded-full px-3 py-0.5 text-xs font-medium uppercase tracking-widest">Complimentary</span>
+                <div className="flex items-center justify-between text-sm font-sans">
+                  <span className="text-[#3A3530]">Shipping</span>
+                  {shippingLoading ? (
+                    <span className="h-4 w-16 animate-pulse rounded bg-[#E5E2DC]"></span>
+                  ) : !shippingAvailable ? (
+                    <span className="rounded-full bg-amber-100 px-3 py-0.5 text-xs font-medium uppercase tracking-widest text-amber-700">Unavailable</span>
+                  ) : shippingCharge > 0 ? (
+                    <span className="font-medium text-black">₹<span className="notranslate">{shippingCharge.toLocaleString('en-IN')}</span></span>
+                  ) : (
+                    <span className="bg-[#D6F0DD] text-[#1A6B30] rounded-full px-3 py-0.5 text-xs font-medium uppercase tracking-widest">Free</span>
+                  )}
                 </div>
+                {estimatedDays && (
+                  <div className="flex items-center justify-between text-sm font-sans">
+                    <span className="text-[#3A3530]">Est. Delivery</span>
+                    <span className="text-[#595148]">{estimatedDays} days</span>
+                  </div>
+                )}
+                {!shippingAvailable && (
+                  <div className="rounded-sm border border-dashed border-amber-400 bg-amber-50 px-3 py-2 text-[12px] text-amber-700">
+                    {shippingReason === 'Auth failed'
+                      ? 'Shiprocket login failed. Check the API user email and API password.'
+                      : 'Delivery not available to this pincode. Please try a different address.'}
+                  </div>
+                )}
               </div>
 
               <div className="mt-6 flex items-center justify-between border-t border-[#C8C3BB] pt-6">
                 <span className="text-[11px] font-sans uppercase tracking-[0.18em] text-black">{t('total')}</span>
-                <span className="text-[28px] font-sans font-semibold text-black">₹<span className="notranslate">{Math.round(cartTotal * 1.18).toLocaleString('en-IN')}</span></span>
+                <span className="text-[28px] font-sans font-semibold text-black">₹<span className="notranslate">{grandTotal.toLocaleString('en-IN')}</span></span>
               </div>
 
               {error && (

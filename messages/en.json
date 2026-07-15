@@ -122,6 +122,9 @@
     "subtotal": "Subtotal",
     "tax": "Tax",
     "total": "Total",
+    "secure_checkout": "Secure Checkout",
+    "subtitle": "Complete Your Acquisition",
+    "back_to_cart": "Back To Cart",
     "empty_cart": "Your cart is empty.",
     "continue_shopping": "Continue Shopping"
   },

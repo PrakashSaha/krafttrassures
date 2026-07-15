@@ -10,6 +10,7 @@ import { useTranslations } from 'next-intl';
 export default function LoginPage() {
   const { login, isAuthenticated, loading } = useAuth();
   const router = useRouter();
+  const [redirectTo, setRedirectTo] = useState('/account');
   const [showLoginPass, setShowLoginPass] = useState(false);
   const [showRegisterPass, setShowRegisterPass] = useState(false);
   const [showRegisterConfirmPass, setShowRegisterConfirmPass] = useState(false);
@@ -18,9 +19,13 @@ export default function LoginPage() {
   // Redirect if already logged in
   React.useEffect(() => {
     if (!loading && isAuthenticated) {
-      router.push('/account');
+      window.location.replace(redirectTo);
     }
-  }, [isAuthenticated, loading, router]);
+  }, [isAuthenticated, loading, redirectTo]);
+
+  React.useEffect(() => {
+    setRedirectTo(new URLSearchParams(window.location.search).get('redirect') || '/account');
+  }, []);
   
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -62,11 +67,11 @@ export default function LoginPage() {
         throw new Error(data.error?.message || 'Invalid credentials');
       }
 
-      login({ 
+      await login({ 
         ...data.user,
         jwt: data.jwt 
       });
-      router.push('/account');
+      window.location.assign(redirectTo);
     } catch (err: any) {
       setLoginError(err.message);
       toast.error('Login Failed', {
@@ -130,11 +135,11 @@ export default function LoginPage() {
         }
       }
 
-      login({ 
+      await login({ 
         ...data.user,
         jwt: data.jwt 
       });
-      router.push('/account');
+      window.location.assign(redirectTo);
     } catch (err: any) {
       setRegError(err.message);
       toast.error('Registration Failed', {
@@ -176,14 +181,7 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {isAuthenticated ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#D33740] border-t-transparent mb-6"></div>
-            <p className="font-serif text-2xl text-black">Authenticating your access...</p>
-            <p className="mt-2 text-sm text-[#595148]">One moment while we prepare your archive.</p>
-          </div>
-        ) : (
-          <div className="mx-auto max-w-[500px]">
+        <div className="mx-auto max-w-[500px]">
             {isLoginView ? (
               /* Login Card */
               <div className="flex flex-col border border-black/5 bg-white p-8 shadow-xl lg:p-12 animate-in fade-in zoom-in-95 duration-700">
@@ -271,8 +269,7 @@ export default function LoginPage() {
                 </div>
               </div>
             )}
-          </div>
-        )}
+        </div>
       </div>
 
       <style jsx>{`

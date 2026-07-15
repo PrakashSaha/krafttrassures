@@ -33,6 +33,11 @@ const nextConfig = {
         hostname: 'inviting-paradise-0588b7235a.media.strapiapp.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'kraft.slingverse.in',
+        pathname: '/**',
+      },
     ],
   },
   // Silence Turbopack workspace warning
