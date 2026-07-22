@@ -50,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const imgArray = Array.isArray(imageData) ? imageData : [imageData];
               const firstImg = imgArray[0]?.attributes || imgArray[0];
               const url = firstImg?.url;
-              const baseUrl = (process.env.NEXT_PUBLIC_STRAPI_URL || 'http://localhost:1337').replace(/\/$/, '');
+              const baseUrl = (process.env.NEXT_PUBLIC_STRAPI_URL || 'https://kraft.slingverse.in').replace(/\/$/, '');
               imgUrl = url ? (url.startsWith('http') ? url : `${baseUrl}${url}`) : '';
           }
           

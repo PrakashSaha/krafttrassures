@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
 
 async function proxy(request: Request, { params }: { params: Promise<{ path: string[] }> }) {
-  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL?.replace(/\/$/, '');
-  if (!strapiUrl) {
-    return NextResponse.json({ error: { message: 'Strapi URL is not configured' } }, { status: 500 });
-  }
+  const strapiUrl = (process.env.NEXT_PUBLIC_STRAPI_URL || 'https://kraft.slingverse.in').replace(/\/$/, '');
 
   const { path } = await params;
   const query = new URL(request.url).search;

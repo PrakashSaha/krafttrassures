@@ -1,10 +1,7 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL;
-if (!STRAPI_URL) {
-  throw new Error('NEXT_PUBLIC_STRAPI_URL is not defined');
-}
+const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL || 'https://kraft.slingverse.in';
 
 export async function GET() {
   try {

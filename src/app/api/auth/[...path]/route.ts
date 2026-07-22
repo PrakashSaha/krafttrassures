@@ -5,11 +5,7 @@ export async function POST(
   { params }: { params: Promise<{ path: string[] }> },
 ) {
   const { path } = await params;
-  const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_URL?.replace(/\/$/, '');
-
-  if (!strapiUrl) {
-    return NextResponse.json({ error: { message: 'Strapi URL is not configured' } }, { status: 500 });
-  }
+  const strapiUrl = (process.env.NEXT_PUBLIC_STRAPI_URL || 'https://kraft.slingverse.in').replace(/\/$/, '');
 
   try {
     const response = await fetch(`${strapiUrl}/api/auth/${path.join('/')}`, {
