@@ -156,7 +156,15 @@ export default function ProductDetailView({
 
             <div className="mb-12 grid grid-cols-2 gap-8 border-y border-[#C8C3BB] py-10">
               <MetaItem label={t('material')} value={product.material || 'Traditional'} />
-              <MetaItem label={t('size')} value={product.size || 'Standard'} />
+              {product.height ? (
+                <MetaItem label={t('height')} value={product.height} />
+              ) : null}
+              {product.width ? (
+                <MetaItem label={t('width')} value={product.width} />
+              ) : null}
+              {!product.height && !product.width && product.size ? (
+                <MetaItem label={t('size')} value={product.size} />
+              ) : null}
               <MetaItem label={t('origin')} value={product.origin || 'Arunachal Pradesh'} />
             </div>
 

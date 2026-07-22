@@ -1,9 +1,3 @@
-const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL;
-
-if (!STRAPI_URL) {
-  throw new Error('CRITICAL FAILURE: NEXT_PUBLIC_STRAPI_URL is not defined. The application cannot communicate with the backend.');
-}
-
 interface FetchOptions extends RequestInit {
   token?: string;
   params?: Record<string, any>;
@@ -15,7 +9,7 @@ export async function fetchAPI(path: string, options: FetchOptions = {}) {
   // Automatically prepend /api if the path doesn't start with it
   // and ensure we don't double it if the caller already included it
   const cleanPath = path.startsWith('/api') ? path.substring(4) : path;
-  let url = `${STRAPI_URL}/api${cleanPath}`;
+  let url = `/api/strapi${cleanPath}`;
   
   if (params) {
     const searchParams = new URLSearchParams();

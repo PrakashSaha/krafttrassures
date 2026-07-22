@@ -334,6 +334,8 @@ function mapProduct(item: any): Product {
     origin: data.origin || data.otherOrigin || 'Arunachal Pradesh',
     otherOrigin: data.otherOrigin,
     size: data.size,
+    height: data.height,
+    width: data.width,
     availability: (data.quantity > 0) ? 'In Stock' : 'Sold Out',
     stock: data.quantity || 0,
     description: data.description || '',

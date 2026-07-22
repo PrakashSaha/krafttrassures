@@ -28,15 +28,8 @@ export default function CheckoutPage() {
   const [shippingAvailable, setShippingAvailable] = useState(true);
   const [shippingReason, setShippingReason] = useState<string | null>(null);
 
-  const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'test'>('test');
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
   const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-
-  useEffect(() => {
-    if (razorpayKey) {
-      setPaymentMethod('razorpay');
-    }
-  }, [razorpayKey]);
 
   useEffect(() => {
     // Dynamic Razorpay SDK loading
@@ -129,6 +122,16 @@ export default function CheckoutPage() {
       return;
     }
 
+    if (shippingLoading) {
+      toast.error('Calculating shipping charge, please wait...');
+      return;
+    }
+
+    if (!shippingAvailable) {
+      toast.error('Delivery is not available to the selected address. Please try a different address.');
+      return;
+    }
+
     setProcessing(true);
     setError(null);
 
@@ -151,7 +154,7 @@ export default function CheckoutPage() {
         return;
       }
       
-      if (paymentMethod === 'razorpay') {
+      if (razorpayKey) {
         if (!razorpayLoaded && !(window as any).Razorpay) {
           toast.error('Payment gateway is still initializing. Please wait a moment.');
           setProcessing(false);
@@ -179,7 +182,9 @@ export default function CheckoutPage() {
                 router.push(`/account/orders`);
               }
             } catch (err: any) {
-              setError(err.message || 'Failed to complete order checkout.');
+              const message = err.message || 'Failed to complete order checkout.';
+              setError(message);
+              toast.error('Order creation failed', { description: message });
             } finally {
               setProcessing(false);
             }
@@ -201,12 +206,17 @@ export default function CheckoutPage() {
         };
 
         const rzp = new (window as any).Razorpay(options);
+        rzp.on('payment.failed', (response: any) => {
+          const message = response.error?.description || response.error?.reason || 'Payment failed. Please try again.';
+          setError(message);
+          setProcessing(false);
+          toast.error('Payment failed', { description: message });
+        });
         rzp.open();
+        setProcessing(false);
       } else {
-        const order = await checkout(selectedAddress, { shippingCharge });
-        if (order) {
-          router.push(`/account/orders`);
-        }
+        toast.error('Razorpay is disabled: Missing API Key in .env file.');
+        setProcessing(false);
       }
     } catch (err: any) {
       setError(err.message || 'Payment failed. Please try again.');
@@ -350,15 +360,12 @@ export default function CheckoutPage() {
                 {/* Razorpay Option */}
                 <div
                   onClick={() => {
-                    if (razorpayKey) setPaymentMethod('razorpay');
-                    else toast.error('Razorpay is disabled: Missing API Key in .env file.');
+                    if (!razorpayKey) toast.error('Razorpay is disabled: Missing API Key in .env file.');
                   }}
                   className={`relative flex items-center justify-between border p-5 transition-all ${
                     !razorpayKey 
                       ? 'border-[#E5E2DC] bg-[#F7F6F3] opacity-60 cursor-not-allowed' 
-                      : paymentMethod === 'razorpay'
-                        ? 'border-[#D33740] bg-[#D33740]/[0.02] cursor-pointer'
-                        : 'border-[#C8C3BB] bg-white hover:border-[#B0A99F] cursor-pointer'
+                      : 'border-[#D33740] bg-[#D33740]/[0.02] cursor-pointer'
                   }`}
                 >
                   <div className="flex items-center gap-4">
@@ -377,7 +384,7 @@ export default function CheckoutPage() {
                       <p className="text-[12px] text-[#595148]">Cards, Netbanking, UPI & Wallets</p>
                     </div>
                   </div>
-                  {paymentMethod === 'razorpay' && razorpayKey && (
+                  {razorpayKey && (
                     <div className="text-[#D33740]">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     </div>
@@ -390,31 +397,6 @@ export default function CheckoutPage() {
                     <span className="font-bold">Developer Notice:</span> The Razorpay Secure Gateway is currently unconfigured. Add <code className="rounded bg-amber-50 px-1 font-mono text-[#D33740]">NEXT_PUBLIC_RAZORPAY_KEY_ID</code> to your local <code className="font-mono">.env</code> file in <code className="font-mono">ktfrontend</code> directory to activate live client testing.
                   </div>
                 )}
-
-                {/* Test Sandbox Option */}
-                <div
-                  onClick={() => setPaymentMethod('test')}
-                  className={`flex items-center justify-between border p-5 cursor-pointer transition-all ${
-                    paymentMethod === 'test'
-                      ? 'border-[#D33740] bg-[#D33740]/[0.02]'
-                      : 'border-[#C8C3BB] bg-white hover:border-[#B0A99F]'
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#8C6E3F] text-white">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    </div>
-                    <div>
-                      <p className="text-[14px] font-medium text-black">Test Mode Payment</p>
-                      <p className="text-[12px] text-[#595148]">Mock instant validation for development checkout</p>
-                    </div>
-                  </div>
-                  {paymentMethod === 'test' && (
-                    <div className="text-[#D33740]">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    </div>
-                  )}
-                </div>
               </div>
             </section>
           </div>
@@ -489,7 +471,7 @@ export default function CheckoutPage() {
               <button
                 type="button"
                 onClick={handlePlaceOrder}
-                disabled={processing || addresses.length === 0}
+                disabled={processing || addresses.length === 0 || !shippingAvailable || shippingLoading}
                 className="group relative mt-6 inline-flex w-full items-center justify-center gap-2 overflow-hidden bg-[#D33740] px-6 py-4 text-[11px] font-sans uppercase tracking-[0.2em] text-white shadow-md transition-colors duration-500 disabled:bg-[#D6D1CB] disabled:text-[#8A8480] disabled:border-[#C8C3BB] disabled:cursor-not-allowed"
               >
                 <span className="relative z-20">

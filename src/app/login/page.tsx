@@ -19,9 +19,9 @@ export default function LoginPage() {
   // Redirect if already logged in
   React.useEffect(() => {
     if (!loading && isAuthenticated) {
-      window.location.replace(redirectTo);
+      router.replace(redirectTo);
     }
-  }, [isAuthenticated, loading, redirectTo]);
+  }, [isAuthenticated, loading, redirectTo, router]);
 
   React.useEffect(() => {
     setRedirectTo(new URLSearchParams(window.location.search).get('redirect') || '/account');
@@ -40,19 +40,13 @@ export default function LoginPage() {
   const [regLoading, setRegLoading] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [isLoginView, setIsLoginView] = useState(true);
-
-  const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL;
-  if (!STRAPI_URL) {
-    throw new Error('NEXT_PUBLIC_STRAPI_URL is not defined');
-  }
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
     setLoginLoading(true);
 
     try {
-      const res = await fetch(`${STRAPI_URL}/api/auth/local`, {
+      const res = await fetch('/api/auth/local', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -71,7 +65,6 @@ export default function LoginPage() {
         ...data.user,
         jwt: data.jwt 
       });
-      window.location.assign(redirectTo);
     } catch (err: any) {
       setLoginError(err.message);
       toast.error('Login Failed', {
@@ -95,7 +88,7 @@ export default function LoginPage() {
     try {
       const username = regEmail;
       
-      const res = await fetch(`${STRAPI_URL}/api/auth/local/register`, {
+      const res = await fetch('/api/auth/local/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -119,7 +112,7 @@ export default function LoginPage() {
       // If registration successful, manually update the phone number
       if (data.jwt && data.user?.id && regPhone) {
         try {
-          await fetch(`${STRAPI_URL}/api/users/${data.user.id}`, {
+          await fetch(`/api/strapi/users/${data.user.id}`, {
             method: 'PUT',
             headers: { 
               'Content-Type': 'application/json',
@@ -139,7 +132,6 @@ export default function LoginPage() {
         ...data.user,
         jwt: data.jwt 
       });
-      window.location.assign(redirectTo);
     } catch (err: any) {
       setRegError(err.message);
       toast.error('Registration Failed', {

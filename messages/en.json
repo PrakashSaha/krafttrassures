@@ -70,6 +70,8 @@
     "material": "Material",
     "origin": "Origin",
     "size": "Size",
+    "height": "Height",
+    "width": "Width",
     "related": "Related Items",
     "you_may_like": "You may also like"
   },

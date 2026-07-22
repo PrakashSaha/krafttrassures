@@ -3,12 +3,6 @@
  * Handles custom authentication routes in Strapi (Forgot Password flow)
  */
 
-const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL;
-
-if (!STRAPI_URL) {
-  console.warn('Warning: NEXT_PUBLIC_STRAPI_URL is not defined in authApi.ts');
-}
-
 /**
  * Helper to handle fetch responses and extract error messages
  */
@@ -27,7 +21,7 @@ export const authApi = {
    * Request an OTP for password reset
    */
   async forgotPassword(email: string) {
-    const res = await fetch(`${STRAPI_URL}/api/otp-store/forgot-password`, {
+    const res = await fetch('/api/strapi/otp-store/forgot-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
@@ -39,7 +33,7 @@ export const authApi = {
    * Verify the OTP and receive a reset token
    */
   async verifyOtp(email: string, otp: string) {
-    const res = await fetch(`${STRAPI_URL}/api/otp-store/verify-otp`, {
+    const res = await fetch('/api/strapi/otp-store/verify-otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, otp }),
@@ -51,7 +45,7 @@ export const authApi = {
    * Reset the password using the reset token
    */
   async resetPassword(resetToken: string, newPassword: string) {
-    const res = await fetch(`${STRAPI_URL}/api/otp-store/reset-password`, {
+    const res = await fetch('/api/strapi/otp-store/reset-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ resetToken, newPassword }),

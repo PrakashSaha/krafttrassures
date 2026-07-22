@@ -12,6 +12,8 @@ export interface Product {
   origin?: string;
   otherOrigin?: string;
   size?: string;
+  height?: string;
+  width?: string;
   availability?: string;
   description?: string;
   fullDescription?: string;

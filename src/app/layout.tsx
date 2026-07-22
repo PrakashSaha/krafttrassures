@@ -75,7 +75,7 @@ export default async function RootLayout({
         <Script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" strategy="afterInteractive" />
 
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <Toaster position="bottom-right" richColors />
+          <Toaster position="bottom-right" richColors closeButton />
           <AuthProvider>
             <CartProvider>
               <Header initialCategories={categories} />

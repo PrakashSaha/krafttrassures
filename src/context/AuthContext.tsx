@@ -100,8 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (localUser.jwt) {
           try {
-            const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_URL;
-            const res = await fetch(`${STRAPI_URL}/api/users/me?fields=id,documentId,username,email,firstName,lastName,phone`, {
+            const res = await fetch('/api/strapi/users/me?fields=id,documentId,username,email,firstName,lastName,phone', {
               headers: { 'Authorization': `Bearer ${localUser.jwt}` },
             });
 
@@ -135,7 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               if (updatedUser.jwt && updatedUser.documentId) {
                 void fetchUserWishlist(updatedUser.jwt, updatedUser.documentId);
               }
-            } else if (res.status === 401) {
+            } else if (res.status === 401 || res.status === 403) {
               setUser(null);
               localStorage.removeItem('kt_user');
             }
@@ -155,11 +154,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = useCallback(async (userData: User) => {
     try {
-      await fetch('/api/auth/set-token', {
+      const res = await fetch('/api/auth/set-token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: userData.jwt }),
       });
+      if (!res.ok) {
+        throw new Error('Failed to set authentication token');
+      }
 
       const rawUser = (userData as any).data?.attributes || (userData as any).attributes || (userData as any).data || userData;
       
