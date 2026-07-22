@@ -202,6 +202,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Login error:', error);
       toast.error('Login failed during session setup');
+      throw error;
     }
   }, [fetchUserWishlist]);
 

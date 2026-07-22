@@ -14,7 +14,11 @@ export async function fetchAPI(path: string, options: FetchOptions = {}) {
   if (params) {
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
-      searchParams.append(key, value);
+      if (Array.isArray(value)) {
+        value.forEach((item, index) => searchParams.append(`${key}[${index}]`, String(item)));
+      } else if (value !== undefined && value !== null) {
+        searchParams.append(key, String(value));
+      }
     });
     url += `?${searchParams.toString()}`;
   }

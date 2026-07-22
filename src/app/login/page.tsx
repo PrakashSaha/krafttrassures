@@ -10,7 +10,11 @@ import { useTranslations } from 'next-intl';
 export default function LoginPage() {
   const { login, isAuthenticated, loading } = useAuth();
   const router = useRouter();
-  const [redirectTo, setRedirectTo] = useState('/account');
+  const [redirectTo] = useState(() => {
+    if (typeof window === 'undefined') return '/account';
+    const requested = new URLSearchParams(window.location.search).get('redirect');
+    return requested?.startsWith('/') && !requested.startsWith('//') ? requested : '/account';
+  });
   const [showLoginPass, setShowLoginPass] = useState(false);
   const [showRegisterPass, setShowRegisterPass] = useState(false);
   const [showRegisterConfirmPass, setShowRegisterConfirmPass] = useState(false);
@@ -23,10 +27,6 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, loading, redirectTo, router]);
 
-  React.useEffect(() => {
-    setRedirectTo(new URLSearchParams(window.location.search).get('redirect') || '/account');
-  }, []);
-  
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -65,6 +65,8 @@ export default function LoginPage() {
         ...data.user,
         jwt: data.jwt 
       });
+      router.replace(redirectTo);
+      router.refresh();
     } catch (err: any) {
       setLoginError(err.message);
       toast.error('Login Failed', {
@@ -132,6 +134,8 @@ export default function LoginPage() {
         ...data.user,
         jwt: data.jwt 
       });
+      router.replace(redirectTo);
+      router.refresh();
     } catch (err: any) {
       setRegError(err.message);
       toast.error('Registration Failed', {
