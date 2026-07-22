@@ -3,7 +3,6 @@
 import React, { memo, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { Product } from '@/lib/types';
@@ -18,8 +17,7 @@ interface ProductCardProps {
 
 export const ProductCard = memo(({ product, isVisible = true, priority = false }: ProductCardProps) => {
   const t = useTranslations('shop');
-  const { user, toggleWishlist, isInWishlist } = useAuth();
-  const router = useRouter();
+  const { toggleWishlist, isInWishlist } = useAuth();
 
   const priceValue = typeof product.price === 'number' 
     ? product.price.toLocaleString('en-IN') 
@@ -29,13 +27,8 @@ export const ProductCard = memo(({ product, isVisible = true, priority = false }
     e.preventDefault();
     e.stopPropagation();
     
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-
     toggleWishlist(product);
-  }, [user, product, toggleWishlist, router]);
+  }, [product, toggleWishlist]);
 
 
   const { addToCart } = useCart();
@@ -44,11 +37,6 @@ export const ProductCard = memo(({ product, isVisible = true, priority = false }
     e.preventDefault();
     e.stopPropagation();
     
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-
     addToCart(product);
     
     // If the item is in the wishlist, remove it when adding to cart
@@ -58,7 +46,7 @@ export const ProductCard = memo(({ product, isVisible = true, priority = false }
         description: `${product.name} has been moved from your wishlist to the cart.`,
       });
     }
-  }, [product, addToCart, isInWishlist, toggleWishlist, user, router]);
+  }, [product, addToCart, isInWishlist, toggleWishlist]);
 
   const defaultImage = product.thumbnail || product.image || '/images/placeholder.png';
   const hoverImage = product.thumbnail ? product.image : product.hoverImage;
@@ -95,9 +83,9 @@ export const ProductCard = memo(({ product, isVisible = true, priority = false }
             <button
               onClick={handleWishlist}
               className="action-icon-btn"
-              title={user ? (isInWishlist(product.id) ? 'Remove' : 'Add to wishlist') : 'Login to wishlist'}
+              title={isInWishlist(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill={user && isInWishlist(product.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" /></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill={isInWishlist(product.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5" /></svg>
             </button>
             <button onClick={handleAddToCart} className="action-icon-btn" title="Add to collection">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 10a4 4 0 0 1-8 0"/><path d="M3.103 6.034h17.794"/><path d="M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z"/></svg>

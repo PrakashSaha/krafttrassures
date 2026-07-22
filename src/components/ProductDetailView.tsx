@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
@@ -19,16 +18,15 @@ export default function ProductDetailView({
 }) {
   const t = useTranslations('product');
   const tShop = useTranslations('shop');
-  const { user, toggleWishlist, isInWishlist } = useAuth();
+  const { toggleWishlist, isInWishlist } = useAuth();
   const { addToCart } = useCart();
-  const router = useRouter();
   
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('description');
   const [mainImage, setMainImage] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
 
-  const isWishlisted = user && isInWishlist(product.id);
+  const isWishlisted = isInWishlist(product.id);
 
   const formattedPrice = typeof product.price === 'number' 
     ? `₹$<span className="notranslate">{product.price.toLocaleString('en-IN')}</span>` 
@@ -39,11 +37,6 @@ export default function ProductDetailView({
     : parseInt((product.price as string).toString().replace(/[₹,]/g, '')) || 0;
 
   const handleWishlist = () => {
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-    
     toggleWishlist({
       ...product,
       price: numericPrice,
@@ -51,11 +44,6 @@ export default function ProductDetailView({
   };
 
   const handleAddToCart = () => {
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-
     setIsAdding(true);
     
     // Smooth delay for 'premium' feel

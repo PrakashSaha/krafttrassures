@@ -28,16 +28,22 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [storageLoaded, setStorageLoaded] = useState(false);
 
-
-  // Sync with Strapi on login / user session change
   useEffect(() => {
-    const handleLogout = () => setCart([]);
-    if (typeof window !== 'undefined') {
-      window.addEventListener('auth-logout', handleLogout);
-      return () => window.removeEventListener('auth-logout', handleLogout);
+    try {
+      // Hydrate after mount so the server and first client render stay identical.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCart(JSON.parse(localStorage.getItem('kt_cart') || '[]'));
+    } catch {
+      localStorage.removeItem('kt_cart');
     }
+    setStorageLoaded(true);
   }, []);
+
+  useEffect(() => {
+    if (storageLoaded) localStorage.setItem('kt_cart', JSON.stringify(cart));
+  }, [cart, storageLoaded]);
 
   useEffect(() => {
     if (!user?.jwt || !user?.documentId) {

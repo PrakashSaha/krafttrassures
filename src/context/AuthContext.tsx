@@ -25,6 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [wishlist, setWishlist] = useState<WishlistProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [storageLoaded, setStorageLoaded] = useState(false);
 
   const fetchUserWishlist = useCallback(async (token: string, userId: string | number) => {
     try {
@@ -75,18 +76,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return acc;
         }, []);
 
-        setWishlist(uniqueProducts);
+        setWishlist(prev => [...uniqueProducts, ...prev].filter((product, index, products) =>
+          products.findIndex(item => String(item.id) === String(product.id)) === index
+        ));
       } else {
-        setWishlist([]);
+        // Keep browser-saved guest items when the account has no remote wishlist yet.
       }
     } catch (error) {
       console.error('Failed to fetch wishlist', error);
-      setWishlist([]);
     }
   }, []);
 
   useEffect(() => {
     const startup = async () => {
+      try {
+        setWishlist(JSON.parse(localStorage.getItem('kt_wishlist') || '[]'));
+      } catch {
+        localStorage.removeItem('kt_wishlist');
+      }
+      setStorageLoaded(true);
+
       const storedUser = localStorage.getItem('kt_user');
       if (!storedUser) {
         setLoading(false);
@@ -152,6 +161,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     startup();
   }, [fetchUserWishlist]);
 
+  useEffect(() => {
+    if (storageLoaded) localStorage.setItem('kt_wishlist', JSON.stringify(wishlist));
+  }, [wishlist, storageLoaded]);
+
   const login = useCallback(async (userData: User) => {
     try {
       const res = await fetch('/api/auth/set-token', {
@@ -196,7 +209,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await fetch('/api/auth/clear-token', { method: 'POST' });
       setUser(null);
-      setWishlist([]);
       localStorage.removeItem('kt_user');
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new Event('auth-logout'));

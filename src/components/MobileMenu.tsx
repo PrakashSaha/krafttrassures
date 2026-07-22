@@ -67,7 +67,7 @@ export default function MobileMenu({ isOpen, onClose, onSearchOpen }: MobileMenu
             Search
           </button>
           <Link
-            href="/account/wishlist"
+            href="/wishlist"
             onClick={onClose}
             className="action-btn flex items-center justify-center relative"
           >

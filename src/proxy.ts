@@ -5,7 +5,7 @@ export default async function proxy(request: NextRequest) {
   const token = request.cookies.get('kt_auth_token')?.value;
   const { pathname } = request.nextUrl;
 
-  const protectedPaths = ['/checkout', '/account', '/wishlist'];
+  const protectedPaths = ['/checkout', '/account'];
   const isProtected = protectedPaths.some(path => 
     pathname.includes(path)
   );
