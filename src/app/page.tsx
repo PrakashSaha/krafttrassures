@@ -51,22 +51,53 @@ export default async function Home({ params }: { params: Promise<any> }) {
     getAdornments()
   ]);
 
+  // Keep the storefront complete while optional CMS sections are being curated.
+  const productsWithImages = [...newArrivals, ...trendingProducts, ...treasureProducts]
+    .filter((product, index, products) =>
+      Boolean(product.thumbnail || product.image) &&
+      products.findIndex(({ id }) => id === product.id) === index
+    );
+
+  const displayedHeroSlides = heroSlides.length > 0 ? heroSlides : productsWithImages.slice(0, 5).map((product) => ({
+    title: 'Ancient Artistry Meets Luxury',
+    subtitle: product.description || 'Discover original tribal crafts from Arunachal Pradesh.',
+    name: product.name,
+    img: product.thumbnail || product.image || '',
+    href: product.href,
+  }));
+
+  const displayedAdornments = adornmentItems.length > 0 ? adornmentItems : productsWithImages.slice(0, 4).map((product) => ({
+    title: product.name,
+    subtitle: product.category,
+    priceText: `₹${product.price.toLocaleString('en-IN')}`,
+    image: product.thumbnail || product.image || '',
+    href: product.href,
+  }));
+
+  const displayedInstagramFeeds = instagramFeeds.some(({ image }) => image)
+    ? instagramFeeds.filter(({ image }) => image)
+    : productsWithImages.slice(0, 4).map((product) => ({
+        id: product.id,
+        image: product.thumbnail || product.image || '',
+        link: product.href,
+      }));
+
   return (
     <>
       <main className="min-h-screen bg-white">
-        <Hero slides={heroSlides} />
+        <Hero slides={displayedHeroSlides} />
         <Intro />
         <Collections categories={categories} />
         <Trending products={trendingProducts} />
         <Heritage />
         <Marquee />
         <NewArrivals products={newArrivals} />
-        <Adornments items={adornmentItems} />
+        <Adornments items={displayedAdornments} />
         <Testimonials reviews={testimonials} />
         <ArtisanStories steps={storySteps} />
         <TimelessTreasures products={treasureProducts} />
         <TrustedBy />
-        <Instagram posts={instagramFeeds} />
+        <Instagram posts={displayedInstagramFeeds} />
         <Features />
       </main>
     </>
